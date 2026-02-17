@@ -3,110 +3,113 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CM108 Mobile Unit - Fixed</title>
+    <title>CM108 Mobile Unit - Pro</title>
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        /* ป้องกันจอล้นและรองรับ Safe Area ของมือถือ */
-        body, html { 
-            margin: 0; padding: 0; width: 100%; height: 100%; 
-            background: #000; color: white; font-family: 'Sarabun', sans-serif;
-            overflow: hidden; position: fixed;
-        }
-        
-        /* หน้า Lobby จัดวางแบบ Responsive */
-        #lobby { 
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            width: 100%; height: 100%; box-sizing: border-box; padding: 20px;
-        }
-        h1 { font-size: 24px; color: #ff3b30; margin: 0 0 20px 0; }
+        :root { --red: #ff3b30; --green: #28a745; --gray: #333; }
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: #000; color: white; font-family: 'Sarabun', sans-serif; overflow: hidden; position: fixed; }
+        #lobby { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; padding: 20px; box-sizing: border-box; }
+        h1 { font-size: 26px; color: var(--red); margin-bottom: 20px; text-transform: uppercase; }
 
-        /* ส่วนสวิตช์ป้องกันตาย */
-        .stable-row {
-            background: #1a1a1a; border: 1px solid #333; padding: 12px 15px;
-            border-radius: 12px; margin-bottom: 20px; width: 100%; max-width: 320px;
-            display: flex; align-items: center; justify-content: space-between;
-        }
-        .switch { position: relative; width: 50px; height: 26px; }
+        /* แผงควบคุมโหมด */
+        .mode-panel { width: 100%; max-width: 350px; display: flex; flex-direction: column; gap: 10px; margin-bottom: 25px; }
+        .mode-card { background: #1a1a1a; border: 1px solid #333; padding: 12px 15px; border-radius: 12px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; }
+        .switch { position: relative; width: 44px; height: 24px; }
         .switch input { opacity: 0; width: 0; height: 0; }
         .slider { position: absolute; inset: 0; background: #444; border-radius: 30px; transition: .4s; }
-        .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 4px; bottom: 4px; background: #fff; border-radius: 50%; transition: .4s; }
-        input:checked + .slider { background: #28a745; }
-        input:checked + .slider:before { transform: translateX(24px); }
+        .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background: #fff; border-radius: 50%; transition: .4s; }
+        input:checked + .slider { background: var(--green); }
+        input:checked + .slider:before { transform: translateX(20px); }
 
-        /* ปุ่มเลือกกล้องขนาดใหญ่ กดง่าย */
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; width: 100%; max-width: 350px; }
-        .btn { 
-            background: #1a1a1a; border: 1px solid #444; color: white; 
-            padding: 20px 10px; border-radius: 12px; cursor: pointer; 
-            font-size: 16px; font-weight: bold; text-align: center;
-        }
-        .btn:active { background: #333; }
-
-        /* พื้นที่วิดีโอ */
+        .cam-btn { background: #1a1a1a; border: 1px solid #444; color: white; padding: 18px 5px; border-radius: 12px; font-size: 16px; font-weight: bold; cursor: pointer; }
+        
+        /* หน้าไลฟ์สด */
         #cam-area { display: none; width: 100%; height: 100%; position: relative; }
         iframe { width: 100%; height: 100%; border: none; }
+        
+        /* แถบเครื่องมือระหว่างไลฟ์ */
+        .live-tools { position: absolute; bottom: 20px; left: 0; right: 0; display: flex; justify-content: center; gap: 15px; z-index: 1000; padding: 0 10px; }
+        .tool-btn { background: rgba(0,0,0,0.6); color: white; border: 1px solid #555; width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; backdrop-filter: blur(5px); font-size: 20px; }
+        .tool-btn.active { background: var(--red); border-color: var(--red); }
+        .stop-btn { background: var(--red); color: white; border: none; padding: 0 25px; border-radius: 30px; font-weight: bold; height: 50px; cursor: pointer; }
 
-        /* ปุ่มหยุดลอยตัวด้านล่าง */
-        .ui-nav {
-            position: absolute; bottom: 30px; left: 0; right: 0;
-            display: flex; justify-content: center; z-index: 9999;
-        }
-        .stop-btn { 
-            background: #ff3b30; color: white; border: none; 
-            padding: 12px 30px; border-radius: 50px; font-weight: bold; 
-            box-shadow: 0 4px 15px rgba(0,0,0,0.5); font-family: 'Sarabun';
-        }
+        /* เลเยอร์ประหยัดพลังงาน (ปิดจอให้มืดลง) */
+        #power-save-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 9998; pointer-events: none; }
+        #power-save-overlay span { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #444; font-size: 12px; text-transform: uppercase; }
     </style>
 </head>
 <body>
 
+    <div id="power-save-overlay"><span>โหมดประหยัดพลังงานทำงานอยู่</span></div>
+
     <div id="lobby">
         <h1>🔴 CM108 LIVE</h1>
         
-        <div class="stable-row" onclick="document.getElementById('st').click()">
-            <div style="text-align:left;">
-                <strong style="font-size:14px;">โหมดเสถียร (ป้องกันตาย)</strong><br>
-                <small id="st-status" style="color:#888;">ปิดอยู่ - เน้นคุณภาพ</small>
+        <div class="mode-panel">
+            <div class="mode-card" onclick="document.getElementById('st').click()">
+                <div style="text-align:left;"><strong>โหมดป้องกันตาย</strong><br><small id="st-info" style="color:#888;">เน้นลื่นไหล กันเน็ตหลุด</small></div>
+                <label class="switch"><input type="checkbox" id="st" onchange="updateUI()"><span class="slider"></span></label>
             </div>
-            <label class="switch"><input type="checkbox" id="st" onchange="updateUI()"><span class="slider"></span></label>
+            <div class="mode-card" onclick="document.getElementById('ps').click()">
+                <div style="text-align:left;"><strong>โหมดประหยัดพลังงาน</strong><br><small id="ps-info" style="color:#888;">ลดความสว่างและ CPU</small></div>
+                <label class="switch"><input type="checkbox" id="ps" onchange="updateUI()"><span class="slider"></span></label>
+            </div>
         </div>
 
         <div class="grid">
-            <button class="btn" onclick="start('CM108_Cam1')">กล้อง 1</button>
-            <button class="btn" onclick="start('CM108_Cam2')">กล้อง 2</button>
-            <button class="btn" onclick="start('CM108_Cam3')">กล้อง 3</button>
-            <button class="btn" onclick="start('CM108_Cam4')">กล้อง 4</button>
+            <button class="cam-btn" onclick="start('CM108_Cam1')">กล้อง 1</button>
+            <button class="cam-btn" onclick="start('CM108_Cam2')">กล้อง 2</button>
+            <button class="cam-btn" onclick="start('CM108_Cam3')">กล้อง 3</button>
+            <button class="cam-btn" onclick="start('CM108_Cam4')">กล้อง 4</button>
         </div>
     </div>
 
     <div id="cam-area">
         <iframe id="vid" allow="camera;microphone;fullscreen;display-capture;autoplay"></iframe>
-        <div class="ui-nav">
-            <button class="stop-btn" onclick="location.reload()">⏹ หยุดส่งสัญญาณ</button>
+        <div class="live-tools">
+            <button id="mute-btn" class="tool-btn" onclick="toggleMute()">🎙️</button>
+            <button id="cam-off-btn" class="tool-btn" onclick="toggleCam()">📷</button>
+            <button class="tool-btn" onclick="flipCam()">🔄</button>
+            <button class="stop-btn" onclick="location.reload()">หยุดส่ง</button>
         </div>
     </div>
 
     <script>
+        let isMuted = false;
+        let isCamOff = false;
+
         function updateUI() {
-            let chk = document.getElementById("st").checked;
-            document.getElementById("st-status").innerText = chk ? "เปิดอยู่ - เน้นลื่นไหล" : "ปิดอยู่ - เน้นคุณภาพ";
-            document.getElementById("st-status").style.color = chk ? "#28a745" : "#888";
+            document.getElementById("st-info").style.color = document.getElementById("st").checked ? "#28a745" : "#888";
+            document.getElementById("ps-info").style.color = document.getElementById("ps").checked ? "#28a745" : "#888";
         }
 
         function start(id) {
-            let isSt = document.getElementById("st").checked;
-            // บังคับ viewchat=1 เพื่อให้ข้อความเด้งขึ้นทันที
-            let cfg = isSt 
-                ? "&width=1280&height=720&framerate=30&buffer=2000&quality=1&chat=1&viewchat=1" 
-                : "&width=1920&height=1080&videobitrate=8000&quality=0&chat=1&viewchat=1";
+            let st = document.getElementById("st").checked;
+            let ps = document.getElementById("ps").checked;
             
-            // เพิ่ม &clean เพื่อลบเมนูระบบ
-            let url = "https://vdo.ninja/?push=" + id + "&room=CM108_NewsRoom" + cfg + "&clean&hidelinks&pwa&autostart&label=" + id;
+            // ปรับแต่งค่าคุณภาพตามโหมดที่เลือก
+            let bitrate = st ? 2500 : 8000;
+            let res = st ? "&width=1280&height=720" : "&width=1920&height=1080";
+            let fps = ps ? 24 : 60; // ประหยัดพลังงานจะลดเฟรมเรตลง
+
+            // &chat=1&viewchat=1 บังคับแชทเด้ง | &hideself=1 ซ่อนภาพตัวเองลดภาระเครื่อง
+            let url = "https://vdo.ninja/?push=" + id + "&room=CM108_NewsRoom" + res + 
+                      "&videobitrate=" + bitrate + "&framerate=" + fps + 
+                      "&chat=1&viewchat=1&clean=1&hidelinks=1&autostart&label=" + id + "&select";
+            
+            if (ps) { document.getElementById('power-save-overlay').style.display = 'block'; }
             
             document.getElementById('vid').src = url;
             document.getElementById('lobby').style.display = 'none';
             document.getElementById('cam-area').style.display = 'block';
         }
+
+        // ฟังก์ชันควบคุมกล้องและไมค์ส่งตรงไปที่ VDO.Ninja Iframe
+        function sendCommand(cmd) { document.getElementById('vid').contentWindow.postMessage({ "function": cmd }, '*'); }
+        function toggleMute() { isMuted = !isMuted; sendCommand(isMuted ? "muteAudio" : "unmuteAudio"); document.getElementById('mute-btn').classList.toggle('active', isMuted); }
+        function toggleCam() { isCamOff = !isCamOff; sendCommand(isCamOff ? "stopVideo" : "startVideo"); document.getElementById('cam-off-btn').classList.toggle('active', isCamOff); }
+        function flipCam() { sendCommand("cycleVideo"); }
     </script>
 </body>
 </html>
