@@ -3,18 +3,92 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="mobile-web-app-capable" content="yes">
     <title>CM108Live - Mobile Unit</title>
     <style>
-        /* จัดหน้าจอให้ดำสนิทและเต็มจอเหมือนแอป */
-        body, html { margin: 0; padding: 0; height: 100%; background-color: #000; overflow: hidden; }
-        iframe { width: 100%; height: 100%; border: none; display: block; }
+        body { margin: 0; padding: 0; background-color: #121212; color: white; font-family: 'Sarabun', sans-serif; height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: hidden; }
+        
+        /* หน้าเมนู (Lobby) */
+        #lobby { text-align: center; width: 100%; max-width: 400px; padding: 20px; box-sizing: border-box; }
+        h1 { margin-bottom: 30px; font-size: 24px; color: #ff3b30; }
+        
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 20px;
+            margin-bottom: 15px;
+            background: #333;
+            border: 2px solid #555;
+            color: white;
+            font-size: 18px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: 0.2s;
+            text-align: left;
+        }
+        .btn:active { background: #555; transform: scale(0.98); }
+        .btn span { float: right; color: #888; font-size: 14px; }
+        
+        /* หน้ากล้อง (ซ่อนไว้ก่อน) */
+        #cam-container { display: none; width: 100%; height: 100%; position: absolute; top: 0; left: 0; background: black; }
+        iframe { width: 100%; height: 100%; border: none; }
+        
+        /* ปุ่มกลับหน้าหลัก */
+        #back-btn { display: none; position: absolute; top: 10px; left: 10px; z-index: 999; background: rgba(0,0,0,0.5); color: white; border: 1px solid white; padding: 5px 10px; border-radius: 5px; cursor: pointer; }
     </style>
 </head>
 <body>
-    <iframe allow="camera;microphone;fullscreen;display-capture;autoplay" 
-            src="https://vdo.ninja/?push=CM108_Cam1&room=CM108_NewsRoom&pwa&autostart&buffer=500&bitrate=2500&label=MobileUnit">
-    </iframe>
+
+    <div id="lobby">
+        <h1>🔴 CM108 Live Unit</h1>
+        <p style="color: #aaa; margin-bottom: 20px;">เลือกตำแหน่งของคุณ:</p>
+        
+        <button class="btn" onclick="startStream('CM108_Cam1')">
+            🎥 กล้องหลัก 1 <span>(Main)</span>
+        </button>
+        
+        <button class="btn" onclick="startStream('CM108_Cam2')">
+            🎥 กล้องรอง 2 <span>(Mobile)</span>
+        </button>
+        
+        <button class="btn" onclick="startStream('CM108_Drone')">
+            🚁 โดรน / มุมสูง <span>(Drone)</span>
+        </button>
+
+        <button class="btn" onclick="startStream('random')">
+            ➕ กล้องเสริมอื่นๆ <span>(Auto ID)</span>
+        </button>
+    </div>
+
+    <div id="cam-container">
+        <button id="back-btn" onclick="stopStream()">❌ ออก</button>
+        <iframe id="stream-frame" allow="camera;microphone;fullscreen;display-capture;autoplay"></iframe>
+    </div>
+
+    <script>
+        function startStream(camId) {
+            // ถ้าเลือกแบบ Random ให้สุ่มเลข
+            if (camId === 'random') {
+                camId = 'CM108_Guest_' + Math.floor(Math.random() * 1000);
+            }
+
+            // สร้าง URL (สูตรเสถียร + ตั้งค่าห้อง CM108_NewsRoom)
+            // สามารถปรับแก้ buffer หรือ bitrate ตรงนี้ได้เลยทีเดียว
+            var streamUrl = "https://vdo.ninja/?push=" + camId + "&room=CM108_NewsRoom&pwa&autostart&buffer=500&bitrate=2500&label=" + camId;
+
+            // สั่งเปิด Iframe
+            document.getElementById('stream-frame').src = streamUrl;
+            
+            // สลับหน้าจอ
+            document.getElementById('lobby').style.display = 'none';
+            document.getElementById('cam-container').style.display = 'block';
+            document.getElementById('back-btn').style.display = 'block';
+        }
+
+        function stopStream() {
+            // รีโหลดหน้าจอเพื่อกลับไปหน้าแรก
+            location.reload();
+        }
+    </script>
+
 </body>
 </html>
