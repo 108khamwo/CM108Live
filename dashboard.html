@@ -8,10 +8,10 @@
         body, html { margin: 0; padding: 0; height: 100vh; background: #000; color: white; font-family: 'Sarabun', sans-serif; overflow: hidden; }
         .container { display: grid; grid-template-rows: 50px 1fr 70px; height: 100vh; }
         header { background: #111; border-bottom: 1px solid #333; display: flex; align-items: center; padding: 0 20px; font-weight: bold; color: #ff3b30; }
-        main { background: #000; overflow: hidden; }
+        main { background: #000; position: relative; }
         iframe { width: 100%; height: 100%; border: none; }
         footer { background: #1a1a1a; border-top: 1px solid #444; display: flex; align-items: center; gap: 15px; padding: 0 20px; }
-        .sel { background: #333; color: white; border: 1px solid #555; padding: 10px; border-radius: 8px; font-family: 'Sarabun'; }
+        .sel { background: #333; color: white; border: 1px solid #555; padding: 10px; border-radius: 8px; font-family: 'Sarabun'; cursor: pointer; }
         .in { flex-grow: 1; background: #000; border: 1px solid #ff3b30; color: #fff; padding: 12px 15px; border-radius: 8px; font-size: 16px; font-family: 'Sarabun'; }
     </style>
 </head>
@@ -19,28 +19,28 @@
 <div class="container">
     <header>CM108 MASTER CONTROL ROOM</header>
     <main>
-        <iframe id="mcr-frame" allow="camera;microphone;fullscreen;display-capture;autoplay" 
-                src="https://vdo.ninja/?director=CM108_NewsRoom&quality=0&cleanoutput=1"></iframe>
+        <iframe id="mcr" allow="camera;microphone;fullscreen;display-capture;autoplay" 
+                src="https://vdo.ninja/?director=CM108_NewsRoom&quality=0&cleanoutput=1&hidelinks=1&hideheader=1&noheader=1"></iframe>
     </main>
     <footer>
         <select id="target" class="sel">
             <option value="all">ส่งหาทุกคน</option>
             <option value="CM108_Cam1">กล้อง 1</option>
             <option value="CM108_Cam2">กล้อง 2</option>
-            <option value="CM108_Cam3">กล้อง 3</option>
+            <option value="CM108_Cam3">กล้อง 3</button>
             <option value="CM108_Cam4">กล้อง 4</option>
         </select>
-        <input type="text" id="msg" class="in" placeholder="พิมพ์ข้อความแล้วกด Enter เพื่อส่งหาทีมงาน..." onkeydown="if(event.key === 'Enter') send()">
+        <input type="text" id="msg" class="in" placeholder="พิมพ์แล้วกด Enter เพื่อส่งหาทีมงาน..." onkeydown="if(event.key === 'Enter') send()">
     </footer>
 </div>
 <script>
     function send() {
         const text = document.getElementById('msg').value.trim();
         const target = document.getElementById('target').value;
-        const frame = document.getElementById('mcr-frame').contentWindow;
+        const frame = document.getElementById('mcr').contentWindow;
         if (!text) return;
 
-        // บังคับส่งผ่าน postMessage เพื่อให้ VDO.Ninja แสดงผลเป็น Overlay แชท
+        // ระบบส่งข้อความแบบ Direct ยิงตรงเข้า Overlay มือถือ
         const payload = { "msg": "chat", "content": text };
         if (target !== 'all') payload.to = target;
         frame.postMessage(payload, '*');
