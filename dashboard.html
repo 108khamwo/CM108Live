@@ -6,70 +6,47 @@
     <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;500;700&display=swap" rel="stylesheet">
     <style>
         body { margin: 0; background: #000; color: white; font-family: 'Prompt', sans-serif; height: 100vh; display: grid; grid-template-rows: 60px 1fr 80px; overflow: hidden; }
-        
         header { background: #111; border-bottom: 2px solid #ff3b30; display: flex; align-items: center; justify-content: space-between; padding: 0 25px; }
-        .logo { font-size: 20px; font-weight: bold; }
-        .logo span { color: #ff3b30; }
-        .status { font-size: 13px; color: #888; }
-
         main { position: relative; background: #000; }
         iframe { width: 100%; height: 100%; border: none; }
-        
-        footer { background: #1a1a1a; border-top: 1px solid #333; padding: 0 20px; display: flex; align-items: center; gap: 15px; }
-        
-        .chat-box { flex-grow: 1; display: flex; gap: 10px; background: #222; padding: 10px; border-radius: 8px; border: 1px solid #333; }
-        select { background: #333; color: white; border: none; padding: 10px; border-radius: 5px; font-family: 'Prompt'; }
-        input { background: transparent; border: none; color: white; flex-grow: 1; font-size: 16px; font-family: 'Prompt'; }
-        input:focus { outline: none; }
-        button { background: #ff3b30; color: white; border: none; padding: 10px 25px; border-radius: 5px; font-weight: bold; cursor: pointer; }
+        footer { background: #1a1a1a; padding: 0 20px; display: flex; align-items: center; gap: 15px; }
+        .chat-box { flex-grow: 1; display: flex; gap: 10px; background: #222; padding: 10px; border-radius: 8px; }
+        select, input, button { font-family: 'Prompt'; border: none; padding: 10px; border-radius: 5px; }
+        select { background: #333; color: white; }
+        input { background: transparent; color: white; flex-grow: 1; }
+        button { background: #ff3b30; color: white; font-weight: bold; cursor: pointer; }
     </style>
 </head>
 <body>
-
     <header>
-        <div class="logo">CM108 <span>MCR SYSTEM</span></div>
-        <div class="status">● ONLINE : CM108_NewsRoom</div>
+        <div style="font-size:20px; font-weight:bold;">CM108 <span style="color:#ff3b30">MCR</span></div>
+        <div style="font-size:13px; color:#888;">● ONLINE</div>
     </header>
-
     <main>
         <iframe id="mcr" allow="camera;microphone;fullscreen;display-capture;autoplay" 
                 src="https://vdo.ninja/?director=CM108_NewsRoom&quality=0&cleanoutput=1&hidelinks=1&hideheader=1&noheader=1"></iframe>
     </main>
-
     <footer>
         <div class="chat-box">
             <span style="font-size:20px;">💬</span>
-            <select id="target">
-                <option value="all">ส่งหาทุกกล้อง</option>
-                <option value="CM108_Cam1">CAM 01</option>
-                <option value="CM108_Cam2">CAM 02</option>
-                <option value="CM108_Cam3">CAM 03</option>
-                <option value="CM108_Cam4">CAM 04</option>
-            </select>
-            <input type="text" id="msg" placeholder="พิมพ์ข้อความสั่งการ... (Enter เพื่อส่ง)" onkeydown="if(event.key === 'Enter') send()">
-            <button onclick="send()">ส่งข้อความ</button>
+            <select id="target"><option value="all">ทุกกล้อง</option><option value="CM108_Cam1">CAM 01</option><option value="CM108_Cam2">CAM 02</option><option value="CM108_Cam3">CAM 03</option><option value="CM108_Cam4">CAM 04</option></select>
+            <input type="text" id="msg" placeholder="ข้อความสั่งการ..." onkeydown="if(event.key === 'Enter') send()">
+            <button onclick="send()">ส่ง</button>
         </div>
     </footer>
-
     <script>
         function send() {
-            const input = document.getElementById('msg');
+            const txt = document.getElementById('msg').value.trim();
             const target = document.getElementById('target').value;
-            const text = input.value.trim();
             const frame = document.getElementById('mcr').contentWindow;
+            if (!txt) return;
 
-            if (!text) return;
-
-            // แก้ไข: ใช้ function "sendChat" เพื่อกระตุ้นระบบแชทของ Ninja โดยตรง
-            // วิธีนี้ชัวร์กว่าการส่ง msg:chat แบบเดิม
-            const payload = { "function": "sendChat", "value": text };
-            if (target !== 'all') payload.target = target; // ถ้าส่งรายตัว
+            // ส่งคำสั่ง sendChat เพื่อให้ระบบ Ninja ทำงานและส่งต่อให้มือถือ
+            const payload = { "function": "sendChat", "value": txt };
+            if (target !== 'all') payload.target = target;
 
             frame.postMessage(payload, '*');
-            
-            input.value = '';
-            input.placeholder = "ส่งแล้ว...";
-            setTimeout(() => input.placeholder = "พิมพ์ข้อความสั่งการ... (Enter เพื่อส่ง)", 1500);
+            document.getElementById('msg').value = '';
         }
     </script>
 </body>
