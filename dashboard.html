@@ -5,63 +5,82 @@
     <title>CM108 MCR PRO</title>
     <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;500;700&display=swap" rel="stylesheet">
     <style>
+        /* จัดหน้าจอ */
         body { margin: 0; background: #000; color: white; font-family: 'Prompt', sans-serif; height: 100vh; display: grid; grid-template-rows: 60px 1fr 80px; overflow: hidden; }
+        
+        /* Header */
         header { background: #111; border-bottom: 2px solid #ff3b30; display: flex; align-items: center; justify-content: space-between; padding: 0 25px; }
+        
+        /* Main View */
         main { position: relative; background: #000; }
         iframe { width: 100%; height: 100%; border: none; }
+        
+        /* Footer (แถบส่งข้อความ) */
         footer { background: #1a1a1a; padding: 0 20px; display: flex; align-items: center; gap: 15px; border-top: 1px solid #333; }
         .chat-box { flex-grow: 1; display: flex; gap: 10px; background: #222; padding: 10px; border-radius: 8px; border: 1px solid #333; }
-        select, input, button { font-family: 'Prompt'; border: none; padding: 10px; border-radius: 5px; }
-        select { background: #333; color: white; }
-        input { background: transparent; color: white; flex-grow: 1; font-size: 16px; }
-        button { background: #ff3b30; color: white; font-weight: bold; cursor: pointer; }
         
+        select { background: #333; color: white; border: none; padding: 10px; border-radius: 5px; font-family: 'Prompt'; }
+        input { background: transparent; color: white; flex-grow: 1; font-size: 16px; border: none; outline: none; font-family: 'Prompt'; }
+        button { background: #ff3b30; color: white; font-weight: bold; cursor: pointer; border: none; padding: 10px 25px; border-radius: 5px; transition: 0.2s; }
+        button:hover { background: #d32f2f; }
+        
+        /* ปุ่มเริ่ม */
         #start-screen { position: fixed; inset: 0; background: #000; z-index: 1000; display: flex; justify-content: center; align-items: center; }
         .big-btn { background: #ff3b30; color: white; font-size: 24px; padding: 20px 40px; border-radius: 50px; border: none; cursor: pointer; box-shadow: 0 0 20px rgba(255,59,48,0.5); }
     </style>
 </head>
 <body>
-    <div id="start-screen"><button class="big-btn" onclick="startSystem()">🚀 เริ่มระบบ</button></div>
+    
+    <div id="start-screen"><button class="big-btn" onclick="startSystem()">🚀 เริ่มระบบควบคุม</button></div>
 
     <header>
         <div style="font-size:20px; font-weight:bold;">CM108 <span>MCR</span></div>
         <div style="font-size:13px; color:#888;">● ONLINE</div>
     </header>
+
     <main>
         <iframe id="mcr" allow="camera;microphone;fullscreen;display-capture;autoplay"></iframe>
     </main>
+
     <footer>
         <div class="chat-box">
             <span style="font-size:20px;">💬</span>
-            <select id="target"><option value="all">ทุกกล้อง</option><option value="CM108_Cam1">CAM 01</option><option value="CM108_Cam2">CAM 02</option><option value="CM108_Cam3">CAM 03</option><option value="CM108_Cam4">CAM 04</option></select>
-            <input type="text" id="msg" placeholder="ข้อความสั่งการ..." onkeydown="if(event.key === 'Enter') send()">
-            <button onclick="send()">ส่ง</button>
+            <select id="target">
+                <option value="all">ส่งหาทุกกล้อง (Broadcast)</option>
+                </select>
+            
+            <input type="text" id="msg" placeholder="พิมพ์ข้อความสั่งการที่นี่..." onkeydown="if(event.key === 'Enter') send()">
+            <button onclick="send()">ส่งข้อความ</button>
         </div>
     </footer>
+
     <script>
         function startSystem() {
             document.getElementById('start-screen').style.display = 'none';
-            // &autoadd=1 : ดึงภาพทุกกล้องขึ้นจออัตโนมัติ
-            // &clean=1 : ลบเมนูรกๆ
-            let url = "https://vdo.ninja/?director=CM108_NewsRoom&quality=0&autoadd=1&clean=1&hidelinks=1&hideheader=1&noheader=1";
+            
+            // เพิ่ม &api=1 เพื่อเปิดรับคำสั่งจาก Dashboard
+            // &autoadd=1 เพื่อดึงภาพอัตโนมัติ
+            let url = "https://vdo.ninja/?director=CM108_NewsRoom&quality=0&autoadd=1&clean=1&hidelinks=1&hideheader=1&noheader=1&api=1";
+            
             document.getElementById('mcr').src = url;
         }
 
         function send() {
             const txt = document.getElementById('msg').value.trim();
-            const target = document.getElementById('target').value;
             const frame = document.getElementById('mcr').contentWindow;
+            
             if (!txt) return;
 
-            const payload1 = { "function": "sendChat", "value": txt };
-            const payload2 = { "msg": "chat", "content": txt };
+            // ส่งคำสั่ง Chat มาตรฐาน (ส่งหาทุกคนเพื่อความชัวร์)
+            // โครงสร้างนี้คือสิ่งที่ VDO.Ninja เข้าใจแน่นอน
+            frame.postMessage({ "function": "sendChat", "value": txt }, '*');
             
-            if (target !== 'all') { payload1.target = target; payload2.to = target; }
-
-            frame.postMessage(payload1, '*');
-            frame.postMessage(payload2, '*');
-            
-            document.getElementById('msg').value = '';
+            // Feedback ว่าส่งแล้ว
+            let input = document.getElementById('msg');
+            input.value = '';
+            let originalPlace = input.placeholder;
+            input.placeholder = "✅ ส่งแล้ว!";
+            setTimeout(() => input.placeholder = originalPlace, 1000);
         }
     </script>
 </body>
