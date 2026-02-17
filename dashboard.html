@@ -4,117 +4,89 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CM108 Master Control Room</title>
-    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --primary-color: #ff3b30;
-            --bg-dark: #0a0a0a;
-            --panel-bg: #161616;
-            --text-main: #ffffff;
-            --text-dim: #888888;
-            --success: #28a745;
-        }
+        :root { --primary: #ff3b30; --bg: #050505; --panel: #111; --text: #eee; }
+        body, html { margin: 0; padding: 0; height: 100%; background: var(--bg); color: var(--text); font-family: 'Sarabun', sans-serif; overflow: hidden; }
+        
+        /* Layout */
+        .wrapper { display: grid; grid-template-columns: 300px 1fr; grid-template-rows: 60px 1fr; height: 100vh; }
+        
+        /* Header */
+        header { grid-column: 1 / 3; background: var(--panel); border-bottom: 2px solid var(--primary); display: flex; align-items: center; justify-content: space-between; padding: 0 20px; z-index: 10; }
+        .logo { font-size: 20px; font-weight: bold; color: var(--primary); }
+        .logo span { color: #fff; font-size: 14px; margin-left: 10px; font-weight: normal; }
 
-        body, html {
-            margin: 0; padding: 0; height: 100%;
-            background-color: var(--bg-dark);
-            color: var(--text-main);
-            font-family: 'Sarabun', sans-serif;
-            overflow: hidden;
-        }
+        /* Sidebar: Message Console */
+        aside { background: var(--panel); border-right: 1px solid #333; padding: 20px; display: flex; flex-direction: column; gap: 15px; }
+        .section-title { font-size: 14px; color: var(--primary); font-weight: bold; border-bottom: 1px solid #333; padding-bottom: 5px; margin-bottom: 10px; }
+        
+        textarea { background: #000; border: 1px solid #444; color: #fff; border-radius: 8px; padding: 10px; resize: none; font-family: 'Sarabun', sans-serif; height: 100px; }
+        .send-btn { background: var(--primary); color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.2s; }
+        .send-btn:hover { background: #d32f2f; }
+        
+        .guide-box { background: #1a1a1a; padding: 12px; border-radius: 8px; font-size: 12px; line-height: 1.6; color: #aaa; border-left: 4px solid var(--primary); }
 
-        /* ส่วนหัวของสถานี */
-        header {
-            height: 60px;
-            background: var(--panel-bg);
-            border-bottom: 2px solid var(--primary-color);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 25px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-            z-index: 100;
-        }
-
-        .brand { display: flex; align-items: center; gap: 15px; }
-        .logo-box {
-            background: var(--primary-color);
-            color: white;
-            padding: 5px 12px;
-            font-weight: bold;
-            border-radius: 4px;
-            letter-spacing: 1px;
-        }
-        .station-name { font-size: 18px; font-weight: 500; }
-        .station-name span { color: var(--text-dim); font-size: 14px; margin-left: 10px; }
-
-        /* แถบสถานะระบบ */
-        .system-status { display: flex; gap: 20px; align-items: center; }
-        .indicator { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-dim); }
-        .dot { width: 8px; height: 8px; background: var(--success); border-radius: 50%; box-shadow: 0 0 10px var(--success); }
-
-        /* พื้นที่แสดงผลหลัก */
-        main {
-            height: calc(100vh - 60px);
-            width: 100%;
-            background: #000;
-            position: relative;
-        }
-
-        iframe {
-            width: 100%;
-            height: 100%;
-            border: none;
-            /* ปรับความสว่างและสีให้ดูคมชัดขึ้น */
-            filter: contrast(1.05) brightness(1.05);
-        }
-
-        /* แถบแจ้งเตือนด้านล่าง */
-        footer {
-            position: absolute;
-            bottom: 0;
-            width: 100%;
-            background: rgba(0,0,0,0.7);
-            padding: 5px 20px;
-            font-size: 11px;
-            color: var(--text-dim);
-            backdrop-filter: blur(5px);
-            display: flex;
-            justify-content: space-between;
-            box-sizing: border-box;
-        }
+        /* Main Display */
+        main { position: relative; background: #000; }
+        iframe { width: 100%; height: 100%; border: none; display: none; }
+        
+        /* Start Overlay (แก้ปัญหาจอดำ) */
+        #start-overlay { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: #000; z-index: 5; }
+        .start-btn { padding: 20px 40px; background: var(--primary); color: white; border: none; border-radius: 50px; font-size: 18px; font-weight: bold; cursor: pointer; box-shadow: 0 0 20px rgba(255, 59, 48, 0.4); }
     </style>
 </head>
 <body>
 
+<div class="wrapper">
     <header>
-        <div class="brand">
-            <div class="logo-box">CM108</div>
-            <div class="station-name">ห้องควบคุมสถานี <span>| ระบบถ่ายทอดสดนอกสถานที่</span></div>
-        </div>
-
-        <div class="system-status">
-            <div class="indicator">
-                <div class="dot"></div>
-                สถานะระบบ: ออนไลน์
-            </div>
-            <div class="indicator" style="color: var(--text-main); font-weight: bold;">
-                ห้องควบคุม: CM108_NewsRoom
-            </div>
-        </div>
+        <div class="logo">CM108 <span>ห้องควบคุมสถานี (MCR)</span></div>
+        <div style="font-size: 12px; color: #666;">ระบบมอนิเตอร์กล้อง 4 ตัว | CM108_NewsRoom</div>
     </header>
 
-    <main>
-        <iframe 
-            allow="camera;microphone;fullscreen;display-capture;autoplay" 
-            src="https://vdo.ninja/?director=CM108_NewsRoom&quality=0&cleanoutput=0">
-        </iframe>
-    </main>
+    <aside>
+        <div class="section-title">💬 ส่งข้อความถึงกล้องทุกตัว</div>
+        <textarea id="msgInput" placeholder="พิมพ์ข้อความภาษาไทยที่นี่..."></textarea>
+        <button class="send-btn" onclick="copyToClipboard()">คัดลอกข้อความด่วน</button>
+        
+        <div class="section-title">💡 วิธีการใช้งาน</div>
+        <div class="guide-box">
+            1. กดปุ่ม <b>"เริ่มระบบ"</b> เพื่อโหลดภาพ<br>
+            2. พิมพ์ข้อความที่ต้องการแจ้งเตือน<br>
+            3. กด <b>"คัดลอก"</b> แล้วนำไปวางในช่อง <b>Chat</b> ของกล้องแต่ละตัวในหน้าจอด้านขวา
+        </div>
+        <p style="font-size: 11px; color: #555;">* ระบบจะแสดงข้อความบนหน้าจอมือถือของนักข่าวทันที</p>
+    </aside>
 
-    <footer>
-        <div>ลิขสิทธิ์ระบบควบคุมภายใน CM108Live v3.0</div>
-        <div>ความละเอียดเป้าหมาย: 1080p60 | โปรโตคอล: WebRTC (Secure)</div>
-    </footer>
+    <main id="main-content">
+        <div id="start-overlay">
+            <button class="start-btn" onclick="initDashboard()">▶ เริ่มระบบมอนิเตอร์</button>
+        </div>
+        <iframe id="directorFrame" allow="camera;microphone;fullscreen;display-capture;autoplay" src=""></iframe>
+    </main>
+</div>
+
+<script>
+    function initDashboard() {
+        // โหลด Iframe เมื่อมีการคลิก เพื่อข้ามการบล็อกของเบราว์เซอร์
+        const frame = document.getElementById('directorFrame');
+        const overlay = document.getElementById('start-overlay');
+        
+        // ใช้ URL ที่สะอาดที่สุดเพื่อลดปัญหา Error
+        frame.src = "https://vdo.ninja/?director=CM108_NewsRoom&quality=0";
+        frame.style.display = "block";
+        overlay.style.display = "none";
+    }
+
+    function copyToClipboard() {
+        const text = document.getElementById('msgInput').value;
+        if (!text) return alert('กรุณาพิมพ์ข้อความก่อนครับ');
+        
+        navigator.clipboard.writeText(text).then(() => {
+            alert('คัดลอกข้อความแล้ว! นำไปวางในช่อง Chat ของกล้องที่ต้องการได้เลยครับ');
+        });
+    }
+</script>
 
 </body>
 </html>
