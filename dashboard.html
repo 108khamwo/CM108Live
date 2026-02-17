@@ -2,187 +2,64 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>CM108 Mobile Unit</title>
+    <title>CM108 MCR PRO</title>
     <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;500;700&display=swap" rel="stylesheet">
     <style>
-        /* Base Reset */
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; }
-        body, html { margin: 0; padding: 0; width: 100%; height: 100dvh; background: #000; overflow: hidden; font-family: 'Prompt', sans-serif; }
-
-        /* --- LOBBY (หน้าตั้งค่าก่อนเริ่ม) --- */
-        #lobby { 
-            position: absolute; inset: 0; z-index: 100; background: #0a0a0a; 
-            display: flex; flex-direction: column; padding: 20px; 
-            overflow-y: auto; text-align: center;
-        }
-        h1 { color: #ff3b30; margin: 10px 0 20px; font-size: 26px; }
-        
-        .label { color: #666; font-size: 13px; margin: 15px 0 10px; border-bottom: 1px solid #333; padding-bottom: 5px; text-align: left; }
-        
-        .mode-box { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
-        .m-btn { background: #1a1a1a; border: 1px solid #333; border-radius: 12px; padding: 15px 5px; color: #aaa; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 5px; }
-        .m-btn.active { background: #ff3b30; border-color: #ff3b30; color: white; }
-        
-        .cam-box { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-        .c-card { background: linear-gradient(145deg, #1e1e1e, #252525); border: 1px solid #333; border-radius: 12px; padding: 20px 0; cursor: pointer; position: relative; }
-        .c-card:active { border-color: #ff3b30; transform: scale(0.96); }
-        .c-card strong { display: block; font-size: 18px; color: white; margin-bottom: 5px; }
-
-        /* --- LIVE VIEW --- */
-        #live-layer { display: none; position: fixed; inset: 0; background: #000; z-index: 50; }
-        
-        /* Zoom Wrapper */
-        #zoom-wrap { width: 100%; height: 100%; transform-origin: center; transition: transform 0.1s linear; }
+        body { margin: 0; background: #000; color: white; font-family: 'Prompt', sans-serif; height: 100vh; display: grid; grid-template-rows: 60px 1fr 80px; overflow: hidden; }
+        header { background: #111; border-bottom: 2px solid #ff3b30; display: flex; align-items: center; justify-content: space-between; padding: 0 25px; }
+        main { position: relative; background: #000; }
         iframe { width: 100%; height: 100%; border: none; }
-
-        /* UI Overlay (สำคัญ: pointer-events: none เพื่อให้จิ้มทะลุไปโดนปุ่ม Ninja) */
-        .ui-overlay { position: absolute; inset: 0; pointer-events: none; }
-
-        /* Top Bar */
-        .top-bar { 
-            position: absolute; top: 0; left: 0; right: 0;
-            padding: 10px; display: flex; justify-content: space-between; align-items: flex-start; 
-            pointer-events: auto; /* เปิดให้กดปุ่มมุมบนได้ */
-        }
-        .status { background: rgba(255,0,0,0.8); color: white; padding: 4px 10px; border-radius: 4px; font-size: 11px; font-weight: bold; }
+        footer { background: #1a1a1a; padding: 0 20px; display: flex; align-items: center; gap: 15px; border-top: 1px solid #333; }
+        .chat-box { flex-grow: 1; display: flex; gap: 10px; background: #222; padding: 10px; border-radius: 8px; border: 1px solid #333; }
+        select, input, button { font-family: 'Prompt'; border: none; padding: 10px; border-radius: 5px; }
+        select { background: #333; color: white; }
+        input { background: transparent; color: white; flex-grow: 1; font-size: 16px; }
+        button { background: #ff3b30; color: white; font-weight: bold; cursor: pointer; }
         
-        /* Message Popup (กลางจอ) */
-        #chat-popup {
-            position: absolute; top: 20%; left: 50%; transform: translate(-50%, -50%);
-            width: 80%; max-width: 400px; background: rgba(0,0,0,0.9); border-left: 5px solid #ff3b30;
-            color: white; padding: 20px; border-radius: 8px; text-align: center;
-            display: none; z-index: 2000; pointer-events: none; animation: popDown 0.3s;
-        }
-        @keyframes popDown { from {transform: translate(-50%, -20px); opacity:0;} to {transform: translate(-50%, 0); opacity:1;} }
-
-        /* RIGHT TOOLS (เครื่องมือเสริม ลอยมุมขวาบน ไม่บังข้างล่าง) */
-        .right-mini-tools {
-            position: absolute; right: 10px; top: 60px;
-            display: flex; flex-direction: column; gap: 10px; align-items: center;
-            pointer-events: auto; 
-            background: rgba(0,0,0,0.4); padding: 10px 5px; border-radius: 20px;
-            backdrop-filter: blur(5px); border: 1px solid rgba(255,255,255,0.1);
-        }
-
-        /* Zoom Slider (เล็กๆ) */
-        .zoom-slider-box { height: 100px; display: flex; align-items: center; justify-content: center; }
-        input[type=range][orient=vertical] {
-            writing-mode: bt-lr; -webkit-appearance: slider-vertical;
-            width: 4px; height: 100%; margin: 0;
-        }
-
-        .mini-btn {
-            width: 35px; height: 35px; border-radius: 50%; border: none;
-            background: rgba(255,255,255,0.2); color: white; font-size: 16px; cursor: pointer;
-        }
-        .stop-btn { background: #ff3b30; font-weight: bold; font-size: 10px; color: white; }
-
-        /* Black Screen */
-        #black-curtain { position: fixed; inset: 0; background: #000; z-index: 300; display: none; align-items: center; justify-content: center; flex-direction: column; color: #555; }
+        #start-screen { position: fixed; inset: 0; background: #000; z-index: 1000; display: flex; justify-content: center; align-items: center; }
+        .big-btn { background: #ff3b30; color: white; font-size: 24px; padding: 20px 40px; border-radius: 50px; border: none; cursor: pointer; box-shadow: 0 0 20px rgba(255,59,48,0.5); }
     </style>
 </head>
 <body>
+    <div id="start-screen"><button class="big-btn" onclick="startSystem()">🚀 เริ่มระบบ</button></div>
 
-    <div id="lobby">
-        <h1>CM108 LIVE</h1>
-        
-        <div class="label">1. เลือกโหมด (Mode)</div>
-        <div class="mode-box">
-            <div class="m-btn active" id="m-hq" onclick="setMode('hq')"><span>💎</span><span>ชัด</span></div>
-            <div class="m-btn" id="m-safe" onclick="setMode('safe')"><span>🛡️</span><span>เสถียร</span></div>
-            <div class="m-btn" id="m-auto" onclick="setMode('auto')"><span>🤖</span><span>ออโต้</span></div>
+    <header>
+        <div style="font-size:20px; font-weight:bold;">CM108 <span>MCR</span></div>
+        <div style="font-size:13px; color:#888;">● ONLINE</div>
+    </header>
+    <main>
+        <iframe id="mcr" allow="camera;microphone;fullscreen;display-capture;autoplay"></iframe>
+    </main>
+    <footer>
+        <div class="chat-box">
+            <span style="font-size:20px;">💬</span>
+            <select id="target"><option value="all">ทุกกล้อง</option><option value="CM108_Cam1">CAM 01</option><option value="CM108_Cam2">CAM 02</option><option value="CM108_Cam3">CAM 03</option><option value="CM108_Cam4">CAM 04</option></select>
+            <input type="text" id="msg" placeholder="ข้อความสั่งการ..." onkeydown="if(event.key === 'Enter') send()">
+            <button onclick="send()">ส่ง</button>
         </div>
-
-        <div class="label">2. เลือกช่อง (Channel)</div>
-        <div class="cam-box">
-            <div class="c-card" onclick="start('CM108_Cam1')"><strong>CAM 01</strong><br><span style="color:#888;font-size:11px;">กล้องหลัก</span></div>
-            <div class="c-card" onclick="start('CM108_Cam2')"><strong>CAM 02</strong><br><span style="color:#888;font-size:11px;">กล้องรอง</span></div>
-            <div class="c-card" onclick="start('CM108_Cam3')"><strong>CAM 03</strong><br><span style="color:#888;font-size:11px;">มุมกว้าง</span></div>
-            <div class="c-card" onclick="start('CM108_Cam4')"><strong>CAM 04</strong><br><span style="color:#888;font-size:11px;">โดรน</span></div>
-        </div>
-    </div>
-
-    <div id="live-layer">
-        <div id="zoom-wrap">
-            <iframe id="vid" allow="camera;microphone;fullscreen;display-capture;autoplay"></iframe>
-        </div>
-
-        <div class="ui-overlay">
-            <div class="top-bar">
-                <div class="status">● LIVE</div>
-            </div>
-
-            <div id="chat-popup">
-                <div style="font-size:10px; color:#ccc;">คำสั่งจากศูนย์:</div>
-                <span id="chat-text" style="font-size:20px; font-weight:bold;">--</span>
-            </div>
-
-            <div class="right-mini-tools">
-                <button class="mini-btn stop-btn" onclick="location.reload()">หยุด</button>
-                <button class="mini-btn" onclick="toggleBlack()">🌙</button>
-                <div style="font-size:8px; color:#aaa; margin-bottom:2px;">ZOOM</div>
-                <div class="zoom-slider-box">
-                    <input type="range" orient="vertical" min="1" max="5" step="0.1" value="1" oninput="doZoom(this.value)">
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div id="black-curtain" onclick="toggleBlack()">
-        <div style="font-size:40px;">🎥</div>
-        <div style="margin-top:10px;">พักหน้าจอ</div>
-        <div style="font-size:12px;">(แตะเพื่อปลุก)</div>
-    </div>
-
+    </footer>
     <script>
-        let currMode = 'hq';
-
-        function setMode(m) {
-            currMode = m;
-            document.querySelectorAll('.m-btn').forEach(b => b.classList.remove('active'));
-            document.getElementById('m-' + m).classList.add('active');
+        function startSystem() {
+            document.getElementById('start-screen').style.display = 'none';
+            let url = "https://vdo.ninja/?director=CM108_NewsRoom&quality=0&autoadd=1&clean=1&hidelinks=1&hideheader=1&noheader=1";
+            document.getElementById('mcr').src = url;
         }
 
-        function start(id) {
-            let p = "";
-            if(currMode === 'hq') p = "&width=1920&height=1080&videobitrate=8000&framerate=60&quality=0";
-            else if(currMode === 'safe') p = "&width=1280&height=720&bitrate=2500&framerate=30&buffer=2000";
-            else p = "&quality=1&meshcast";
+        function send() {
+            const txt = document.getElementById('msg').value.trim();
+            const target = document.getElementById('target').value;
+            const frame = document.getElementById('mcr').contentWindow;
+            if (!txt) return;
 
-            // &clean=0 : หัวใจสำคัญ! เปิดหน้าเดิม Ninja ทั้งหมด (ปุ่มตั้งค่าจะอยู่ล่างซ้าย/กลาง)
-            // &viewchat=1 : เปิดแชท
-            // &select : เลือกกล้องตอนเริ่ม
-            let url = "https://vdo.ninja/?push=" + id + "&room=CM108_NewsRoom" + p + 
-                      "&clean=0&transparent=0&viewchat=1&api=1&autostart&label=" + id + "&select";
+            const payload1 = { "function": "sendChat", "value": txt };
+            const payload2 = { "msg": "chat", "content": txt };
+            
+            if (target !== 'all') { payload1.target = target; payload2.to = target; }
 
-            document.getElementById('vid').src = url;
-            document.getElementById('lobby').style.display = 'none';
-            document.getElementById('live-layer').style.display = 'block';
-
-            window.addEventListener('message', function(e) {
-                if (e.data.action === 'chat' || e.data.msg === 'chat') {
-                    showChat(e.data.value || e.data.content);
-                }
-            });
-        }
-
-        function showChat(txt) {
-            if(!txt) return;
-            let pop = document.getElementById('chat-popup');
-            document.getElementById('chat-text').innerText = txt;
-            pop.style.display = 'block';
-            if(navigator.vibrate) navigator.vibrate(200);
-            setTimeout(() => { pop.style.display = 'none'; }, 10000);
-        }
-
-        function doZoom(val) {
-            document.getElementById('zoom-wrap').style.transform = `scale(${val})`;
-        }
-
-        function toggleBlack() {
-            let b = document.getElementById('black-curtain');
-            b.style.display = (b.style.display === 'flex') ? 'none' : 'flex';
+            frame.postMessage(payload1, '*');
+            frame.postMessage(payload2, '*');
+            
+            document.getElementById('msg').value = '';
         }
     </script>
 </body>
