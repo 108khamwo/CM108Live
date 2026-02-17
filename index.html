@@ -3,100 +3,118 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CM108 Mobile Unit - Pro</title>
+    <title>CM108 Mobile Unit - Pro Clean</title>
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        body { margin: 0; padding: 0; background-color: #000; color: white; font-family: 'Sarabun', sans-serif; height: 100vh; overflow: hidden; }
-        #app-content { width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        :root { --red: #ff3b30; --green: #28a745; --bg: #000; }
+        body, html { margin: 0; padding: 0; height: 100vh; background-color: var(--bg); color: white; font-family: 'Sarabun', sans-serif; overflow: hidden; }
         
-        /* หน้าหลักเลือกกล้อง */
-        #lobby { text-align: center; width: 100%; max-width: 500px; padding: 20px; box-sizing: border-box; }
-        h1 { margin: 0 0 5px 0; font-size: 26px; color: #ff3b30; text-transform: uppercase; }
-        .subtitle { color: #666; font-size: 13px; margin-bottom: 25px; }
+        /* หน้าเลือกกล้อง (Lobby) */
+        #lobby { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; padding: 20px; box-sizing: border-box; }
+        h1 { margin: 0 0 5px 0; font-size: 24px; color: var(--red); text-transform: uppercase; }
+        .mode-selector { background: #1a1a1a; border: 1px solid #333; padding: 12px 20px; border-radius: 15px; margin-bottom: 20px; display: flex; align-items: center; cursor: pointer; width: 100%; max-width: 400px; }
+        .grid-container { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; max-width: 400px; }
+        .btn { background: #1a1a1a; border: 1px solid #444; color: white; padding: 15px; border-radius: 12px; cursor: pointer; text-align: left; }
+        .btn strong { display: block; font-size: 18px; margin-bottom: 3px; }
 
-        /* สวิตช์เลือกโหมด */
-        .mode-selector { background: #1a1a1a; border: 1px solid #333; padding: 15px; border-radius: 15px; margin-bottom: 20px; display: flex; align-items: center; cursor: pointer; }
-        .switch { position: relative; display: inline-block; width: 50px; height: 28px; pointer-events: none; }
-        .switch input { opacity: 0; width: 0; height: 0; }
-        .slider { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background-color: #333; transition: .4s; border-radius: 34px; }
-        .slider:before { position: absolute; content: ""; height: 20px; width: 20px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
-        input:checked + .slider { background-color: #28a745; }
-        input:checked + .slider:before { transform: translateX(22px); }
-
-        /* ปุ่มเลือกกล้อง */
-        .grid-container { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; width: 100%; }
-        .btn { background: linear-gradient(145deg, #1e1e1e, #2a2a2a); border: 1px solid #444; color: white; padding: 18px; border-radius: 12px; cursor: pointer; text-align: left; min-height: 90px; }
-        .btn strong { font-size: 18px; display: block; margin-bottom: 3px; }
-        .btn span { font-size: 11px; color: #777; }
-
-        /* หน้าส่งสัญญาณ */
-        #cam-container { display: none; width: 100%; height: 100%; position: absolute; top: 0; left: 0; background: black; }
+        /* พื้นที่ถ่ายทอดสด (Live Area) */
+        #cam-container { display: none; width: 100%; height: 100%; position: relative; }
         iframe { width: 100%; height: 100%; border: none; }
-        
-        /* แถบสถานะแบบโปร่งใส (Mini Monitor) */
-        .mini-stats {
-            position: absolute; top: 10px; right: 10px; 
-            background: rgba(0,0,0,0.5); padding: 5px 12px; 
-            border-radius: 20px; font-size: 11px; color: #0f0;
-            display: flex; gap: 15px; backdrop-filter: blur(4px);
-            border: 1px solid rgba(0,255,0,0.3); z-index: 1000;
+
+        /* แถบควบคุมด้านบน (Top Bar) */
+        .top-bar {
+            position: absolute; top: 0; left: 0; right: 0; height: 60px;
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 0 15px; z-index: 100;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.8) 0%, transparent 100%);
         }
-        #back-btn { position: absolute; top: 10px; left: 10px; z-index: 1000; background: rgba(220, 53, 69, 0.7); color: white; border: none; padding: 6px 15px; border-radius: 20px; font-size: 12px; cursor: pointer; }
+
+        /* ปุ่มหยุด (ฝั่งซ้าย) */
+        .stop-btn {
+            background: var(--red); color: white; border: none;
+            padding: 8px 18px; border-radius: 20px; font-weight: bold;
+            font-size: 13px; cursor: pointer; box-shadow: 0 2px 10px rgba(0,0,0,0.5);
+        }
+
+        /* แถบสถานะ (ฝั่งขวา) */
+        .status-panel {
+            background: rgba(0, 0, 0, 0.6); padding: 5px 12px;
+            border-radius: 10px; border: 1px solid rgba(255,255,255,0.2);
+            backdrop-filter: blur(5px); text-align: right;
+        }
+        .status-item { font-size: 11px; display: block; line-height: 1.4; }
+        .mode-tag { color: var(--green); font-weight: bold; }
+        .alert-tag { color: #ffc107; font-size: 10px; }
+
+        /* สวิตช์โหมด */
+        .switch { position: relative; width: 44px; height: 24px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; inset: 0; background: #444; border-radius: 24px; transition: .4s; }
+        .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background: white; border-radius: 50%; transition: .4s; }
+        input:checked + .slider { background: var(--green); }
+        input:checked + .slider:before { transform: translateX(20px); }
     </style>
 </head>
-<body id="main-body">
+<body>
 
-    <div id="app-content">
-        <div id="lobby">
-            <h1>🔴 CM108 LIVE</h1>
-            <div class="subtitle">ระบบส่งสัญญาณภาคสนาม</div>
+    <div id="lobby">
+        <h1>🔴 CM108 LIVE</h1>
+        <div style="font-size: 12px; color: #666; margin-bottom: 20px;">ระบบส่งสัญญาณเชียงใหม่</div>
 
-            <div class="mode-selector" onclick="toggleStableMode()">
-                <label class="switch"><input type="checkbox" id="stableCheck"><span class="slider"></span></label>
-                <div style="text-align:left; margin-left:15px;"><strong id="modeTitle">โหมดปกติ (HQ)</strong><br><span id="modeDesc" style="font-size:11px;color:#666">1080p 60fps | คมชัดสูงสุด</span></div>
-            </div>
-            
-            <div class="grid-container">
-                <button class="btn" onclick="startStream('CM108_Cam1')"><strong>🎥 กล้อง 1</strong><span>Main Unit</span></button>
-                <button class="btn" onclick="startStream('CM108_Cam2')"><strong>🎥 กล้อง 2</strong><span>Mobile Unit</span></button>
-                <button class="btn" onclick="startStream('CM108_Cam3')"><strong>🎥 กล้อง 3</strong><span>Wide Angle</span></button>
-                <button class="btn" onclick="startStream('CM108_Cam4')"><strong>🚁 กล้อง 4</strong><span>Drone / Spare</span></button>
-            </div>
+        <div class="mode-selector" onclick="toggleMode()">
+            <label class="switch"><input type="checkbox" id="modeCheck"><span class="slider"></span></label>
+            <div style="margin-left:15px;"><strong id="modeTitle">โหมดปกติ (HQ)</strong><br><span id="modeDesc" style="font-size:11px;color:#888;">1080p | คมชัดสูงสุด</span></div>
         </div>
-
-        <div id="cam-container">
-            <button id="back-btn" onclick="location.reload()">❌ หยุดไลฟ์</button>
-            <div class="mini-stats">
-                <span>📡 FHD 1080p</span>
-                <span id="live-status">● กำลังส่งสัญญาณ</span>
-            </div>
-            <iframe id="stream-frame" allow="camera;microphone;fullscreen;display-capture;autoplay"></iframe>
+        
+        <div class="grid-container">
+            <button class="btn" onclick="startStream('CM108_Cam1')"><strong>กล้อง 1</strong><span>Main</span></button>
+            <button class="btn" onclick="startStream('CM108_Cam2')"><strong>กล้อง 2</strong><span>Mobile</span></button>
+            <button class="btn" onclick="startStream('CM108_Cam3')"><strong>กล้อง 3</strong><span>Wide</span></button>
+            <button class="btn" onclick="startStream('CM108_Cam4')"><strong>กล้อง 4</strong><span>Drone</span></button>
         </div>
     </div>
 
+    <div id="cam-container">
+        <div class="top-bar">
+            <button class="stop-btn" onclick="location.reload()">⏹ หยุดไลฟ์</button>
+            
+            <div class="status-panel">
+                <span class="status-item">📡 กำลังส่ง: <span id="disp-res">1080p</span></span>
+                <span class="status-item">⚙️ โหมด: <span id="disp-mode" class="mode-tag">HQ</span></span>
+                <span class="status-item alert-tag">● สัญญาณออนไลน์</span>
+            </div>
+        </div>
+        <iframe id="stream-frame" allow="camera;microphone;fullscreen;display-capture;autoplay"></iframe>
+    </div>
+
     <script>
-        function toggleStableMode() {
-            let check = document.getElementById("stableCheck");
+        function toggleMode() {
+            let check = document.getElementById("modeCheck");
             let title = document.getElementById("modeTitle");
             let desc = document.getElementById("modeDesc");
             check.checked = !check.checked;
             title.innerText = check.checked ? "โหมดกันตาย (Stable)" : "โหมดปกติ (HQ)";
             title.style.color = check.checked ? "#28a745" : "white";
-            desc.innerText = check.checked ? "720p 30fps | เน้นลื่นไหล" : "1080p 60fps | คมชัดสูงสุด";
+            desc.innerText = check.checked ? "720p | เน้นลื่นไหล" : "1080p | คมชัดสูงสุด";
         }
 
         function startStream(camId) {
-            let isStable = document.getElementById("stableCheck").checked;
+            let isStable = document.getElementById("modeCheck").checked;
             
-            // ลบ &stats=1 ออกแล้วเพื่อไม่ให้บังจอ
-            // เพิ่ม &meter=1 (แถบเล็กๆ ด้านข้าง ไม่บังภาพ)
-            let baseParams = "&width=1920&height=1080&videobitrate=8000&quality=0&denoise=0&scale=100&select&meter=1";
-            
-            if (isStable) {
-                baseParams = "&width=1280&height=720&framerate=30&maxbitrate=2500&quality=1&buffer=2000&select&meter=1";
-            }
+            // ปรับสถานะที่แสดงผล
+            document.getElementById('disp-res').innerText = isStable ? "720p" : "1080p";
+            document.getElementById('disp-mode').innerText = isStable ? "Stable" : "HQ";
+            document.getElementById('disp-mode').style.color = isStable ? "#28a745" : "#00ff00";
 
-            let streamUrl = "https://vdo.ninja/?push=" + camId + "&room=CM108_NewsRoom" + baseParams + "&pwa&autostart&label=" + camId; 
+            // &clean=1 ลบปุ่ม VDO.Ninja
+            // &meter=1 แสดงแถบสัญญาณเน็ตเล็กๆ
+            let params = isStable 
+                ? "&width=1280&height=720&framerate=30&maxbitrate=2500&buffer=2000&quality=1" 
+                : "&width=1920&height=1080&videobitrate=8000&quality=0&denoise=0";
+
+            let streamUrl = "https://vdo.ninja/?push=" + camId + 
+                            "&room=CM108_NewsRoom" + params + 
+                            "&clean&hidelinks&pwa&autostart&label=" + camId + "&select"; 
 
             document.getElementById('stream-frame').src = streamUrl;
             document.getElementById('lobby').style.display = 'none';
