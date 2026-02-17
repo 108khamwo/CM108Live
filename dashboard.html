@@ -2,64 +2,66 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <title>CM108 PRO SWITCHER v6.0</title>
+    <title>CM108 MCR SWITCHER</title>
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        :root { --primary: #ff3b30; --bg: #000; --panel: #111; }
-        body, html { margin: 0; padding: 0; height: 100vh; background: var(--bg); color: #eee; font-family: 'Sarabun', sans-serif; overflow: hidden; }
-        .wrapper { display: grid; grid-template-rows: 50px 1fr 70px; height: 100vh; }
-        header { background: var(--panel); border-bottom: 1px solid #333; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; }
-        .logo { font-size: 18px; font-weight: bold; color: var(--primary); }
-        main { background: #000; position: relative; }
+        :root { --red: #ff3b30; --bg: #000; }
+        body, html { margin: 0; padding: 0; height: 100vh; background: var(--bg); color: white; font-family: 'Sarabun', sans-serif; overflow: hidden; }
+        .layout { display: grid; grid-template-rows: 50px 1fr 70px; height: 100vh; }
+        
+        header { background: #111; border-bottom: 1px solid #333; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; }
+        .logo { font-size: 18px; font-weight: bold; color: var(--red); }
+        
+        main { background: #000; overflow: hidden; }
         iframe { width: 100%; height: 100%; border: none; }
-        .control-bar { background: #1a1a1a; border-top: 1px solid #444; padding: 10px 20px; display: flex; align-items: center; gap: 15px; }
-        .target-select { background: #333; color: white; border: 1px solid #555; padding: 8px; border-radius: 8px; font-family: 'Sarabun'; }
-        .chat-input { flex-grow: 1; background: #000; border: 1px solid var(--primary); color: #fff; padding: 12px 15px; border-radius: 8px; font-size: 16px; font-family: 'Sarabun'; }
+
+        footer { background: #1a1a1a; border-top: 1px solid #444; display: flex; align-items: center; gap: 15px; padding: 0 20px; }
+        .target { background: #333; color: white; border: 1px solid #555; padding: 10px; border-radius: 8px; font-family: 'Sarabun'; }
+        .input-box { flex-grow: 1; background: #000; border: 1px solid var(--red); color: #fff; padding: 12px 15px; border-radius: 8px; font-size: 16px; font-family: 'Sarabun'; }
     </style>
 </head>
 <body>
-<div class="wrapper">
+
+<div class="layout">
     <header>
-        <div class="logo">CM108 <span>PRO SWITCHER</span></div>
-        <div style="font-size: 12px; color: #888;">Master Control Room | CM108_NewsRoom</div>
+        <div class="logo">CM108 <span>MCR v7.0</span></div>
+        <div style="font-size: 12px; color: #888;">ห้องคุมสัญญาณ: CM108_NewsRoom</div>
     </header>
+
     <main>
-        <iframe id="vdoframe" allow="camera;microphone;fullscreen;display-capture;autoplay" 
-                src="https://vdo.ninja/?director=CM108_NewsRoom&quality=0&hidelinks=1&hideheader=1&noheader=1"></iframe>
+        <iframe id="mcr" allow="camera;microphone;fullscreen;display-capture;autoplay" 
+                src="https://vdo.ninja/?director=CM108_NewsRoom&quality=0&noheader=1&hidelinks=1&hideheader=1"></iframe>
     </main>
-    <footer class="control-bar">
-        <div style="font-size: 14px; color: var(--primary); font-weight: bold;">ส่งข้อความ:</div>
-        <select id="targetCam" class="target-select">
-            <option value="all">ส่งหาทุกคน (All)</option>
+
+    <footer>
+        <select id="camTarget" class="target">
+            <option value="all">ส่งหาทุกคน</option>
             <option value="CM108_Cam1">กล้อง 1</option>
             <option value="CM108_Cam2">กล้อง 2</option>
             <option value="CM108_Cam3">กล้อง 3</option>
             <option value="CM108_Cam4">กล้อง 4</option>
         </select>
-        <input type="text" id="chatInput" class="chat-input" placeholder="พิมพ์ข้อความที่นี่แล้วกด Enter เพื่อส่งด่วน..." onkeydown="if(event.key === 'Enter') sendMessage()">
-        <div style="font-size: 11px; color: #555;">กด <b>Enter</b> เพื่อส่ง</div>
+        <input type="text" id="chatMsg" class="input-box" placeholder="พิมพ์ข้อความที่นี่แล้วกด Enter เพื่อส่งด่วน..." onkeydown="if(event.key === 'Enter') doSend()">
     </footer>
 </div>
+
 <script>
-    function sendMessage() {
-        const input = document.getElementById('chatInput');
-        const msg = input.value.trim();
+    function doSend() {
+        const msg = document.getElementById('chatMsg').value.trim();
+        const target = document.getElementById('camTarget').value;
+        const frame = document.getElementById('mcr').contentWindow;
+
         if (!msg) return;
 
-        const target = document.getElementById('targetCam').value;
-        const frame = document.getElementById('vdoframe');
+        // รูปแบบ Payload ที่ VDO.Ninja รองรับเพื่อเด้งขึ้นหน้าจอกล้อง
+        const data = { "msg": "chat", "content": msg };
+        if (target !== 'all') data.to = target;
+
+        frame.postMessage(data, '*');
         
-        // ส่งข้อความผ่าน VDO.Ninja API
-        const payload = { "msg": "chat", "content": msg };
-        if (target !== 'all') { payload.to = target; }
-        
-        frame.contentWindow.postMessage(payload, '*');
-        
-        // ล้างช่องพิมพ์หลังส่ง
-        input.value = '';
-        input.placeholder = "ส่งสำเร็จ!";
-        setTimeout(() => { input.placeholder = "พิมพ์ข้อความที่นี่แล้วกด Enter เพื่อส่งด่วน..."; }, 1000);
+        document.getElementById('chatMsg').value = ''; // ล้างช่องพิมพ์
     }
 </script>
+
 </body>
 </html>
