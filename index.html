@@ -3,45 +3,45 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CM108 Mobile Unit (Stats Edition)</title>
+    <title>CM108 Mobile Unit - Pro</title>
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        body { margin: 0; padding: 0; background-color: #0d0d0d; color: white; font-family: sans-serif; height: 100vh; overflow: hidden; }
+        body { margin: 0; padding: 0; background-color: #000; color: white; font-family: 'Sarabun', sans-serif; height: 100vh; overflow: hidden; }
         #app-content { width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        
+        /* หน้าหลักเลือกกล้อง */
         #lobby { text-align: center; width: 100%; max-width: 500px; padding: 20px; box-sizing: border-box; }
-        h1 { margin-bottom: 5px; font-size: 26px; color: #ff3b30; text-transform: uppercase; }
-        .subtitle { color: #666; font-size: 12px; margin-bottom: 25px; }
+        h1 { margin: 0 0 5px 0; font-size: 26px; color: #ff3b30; text-transform: uppercase; }
+        .subtitle { color: #666; font-size: 13px; margin-bottom: 25px; }
 
-        /* ระบบเลือกโหมด */
+        /* สวิตช์เลือกโหมด */
         .mode-selector { background: #1a1a1a; border: 1px solid #333; padding: 15px; border-radius: 15px; margin-bottom: 20px; display: flex; align-items: center; cursor: pointer; }
-        .switch { position: relative; display: inline-block; width: 60px; height: 34px; pointer-events: none; }
+        .switch { position: relative; display: inline-block; width: 50px; height: 28px; pointer-events: none; }
         .switch input { opacity: 0; width: 0; height: 0; }
         .slider { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background-color: #333; transition: .4s; border-radius: 34px; }
-        .slider:before { position: absolute; content: ""; height: 26px; width: 26px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
+        .slider:before { position: absolute; content: ""; height: 20px; width: 20px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
         input:checked + .slider { background-color: #28a745; }
-        input:checked + .slider:before { transform: translateX(26px); }
+        input:checked + .slider:before { transform: translateX(22px); }
 
         /* ปุ่มเลือกกล้อง */
         .grid-container { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; width: 100%; }
-        .btn { background: linear-gradient(145deg, #1e1e1e, #2a2a2a); border: 1px solid #444; color: white; padding: 20px; border-radius: 15px; cursor: pointer; text-align: left; min-height: 100px; position: relative; }
-        .btn:active { transform: scale(0.95); }
-        .btn strong { font-size: 18px; display: block; margin-bottom: 4px; }
+        .btn { background: linear-gradient(145deg, #1e1e1e, #2a2a2a); border: 1px solid #444; color: white; padding: 18px; border-radius: 12px; cursor: pointer; text-align: left; min-height: 90px; }
+        .btn strong { font-size: 18px; display: block; margin-bottom: 3px; }
+        .btn span { font-size: 11px; color: #777; }
 
-        /* หน้าจอส่งสัญญาณ */
+        /* หน้าส่งสัญญาณ */
         #cam-container { display: none; width: 100%; height: 100%; position: absolute; top: 0; left: 0; background: black; }
         iframe { width: 100%; height: 100%; border: none; }
         
-        /* ปุ่มและแถบสถานะ (Overlay) */
-        .overlay-top { position: absolute; top: 15px; left: 15px; right: 15px; z-index: 999; display: flex; justify-content: space-between; align-items: flex-start; }
-        .ctrl-btns { display: flex; gap: 10px; }
-        .ctrl-btn { background: rgba(220, 53, 69, 0.8); color: white; border: none; padding: 10px 18px; border-radius: 30px; font-weight: bold; cursor: pointer; }
-        
-        /* กล่องกราฟและสถิติ (นี่คือส่วนที่เพิ่มใหม่) */
-        #stats-panel { background: rgba(0, 0, 0, 0.7); padding: 10px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.2); backdrop-filter: blur(5px); font-family: monospace; font-size: 11px; min-width: 120px; pointer-events: none; }
-        .stat-item { display: flex; justify-content: space-between; margin-bottom: 3px; }
-        .stat-val { font-weight: bold; margin-left: 10px; }
-        .status-ok { color: #28a745; }
-        .status-warn { color: #ffc107; }
-        .status-crit { color: #ff3b30; }
+        /* แถบสถานะแบบโปร่งใส (Mini Monitor) */
+        .mini-stats {
+            position: absolute; top: 10px; right: 10px; 
+            background: rgba(0,0,0,0.5); padding: 5px 12px; 
+            border-radius: 20px; font-size: 11px; color: #0f0;
+            display: flex; gap: 15px; backdrop-filter: blur(4px);
+            border: 1px solid rgba(0,255,0,0.3); z-index: 1000;
+        }
+        #back-btn { position: absolute; top: 10px; left: 10px; z-index: 1000; background: rgba(220, 53, 69, 0.7); color: white; border: none; padding: 6px 15px; border-radius: 20px; font-size: 12px; cursor: pointer; }
     </style>
 </head>
 <body id="main-body">
@@ -49,33 +49,26 @@
     <div id="app-content">
         <div id="lobby">
             <h1>🔴 CM108 LIVE</h1>
-            <div class="subtitle">MONITORING SYSTEM ON</div>
+            <div class="subtitle">ระบบส่งสัญญาณภาคสนาม</div>
 
             <div class="mode-selector" onclick="toggleStableMode()">
                 <label class="switch"><input type="checkbox" id="stableCheck"><span class="slider"></span></label>
-                <div style="text-align:left; margin-left:15px;"><strong id="modeTitle">โหมดปกติ (HQ)</strong><br><span style="font-size:11px;color:#666">1080p 60fps | High Bitrate</span></div>
+                <div style="text-align:left; margin-left:15px;"><strong id="modeTitle">โหมดปกติ (HQ)</strong><br><span id="modeDesc" style="font-size:11px;color:#666">1080p 60fps | คมชัดสูงสุด</span></div>
             </div>
             
             <div class="grid-container">
-                <button class="btn" onclick="startStream('CM108_Cam1')"><strong>🎥 กล้อง 1</strong></button>
-                <button class="btn" onclick="startStream('CM108_Cam2')"><strong>🎥 กล้อง 2</strong></button>
-                <button class="btn" onclick="startStream('CM108_Cam3')"><strong>🎥 กล้อง 3</strong></button>
-                <button class="btn" onclick="startStream('CM108_Cam4')"><strong>🚁 กล้อง 4</strong></button>
+                <button class="btn" onclick="startStream('CM108_Cam1')"><strong>🎥 กล้อง 1</strong><span>Main Unit</span></button>
+                <button class="btn" onclick="startStream('CM108_Cam2')"><strong>🎥 กล้อง 2</strong><span>Mobile Unit</span></button>
+                <button class="btn" onclick="startStream('CM108_Cam3')"><strong>🎥 กล้อง 3</strong><span>Wide Angle</span></button>
+                <button class="btn" onclick="startStream('CM108_Cam4')"><strong>🚁 กล้อง 4</strong><span>Drone / Spare</span></button>
             </div>
-            <p style="color:#555; font-size:11px; margin-top:20px;">* ระบบจะแสดงกราฟสถิติเมื่อเริ่มส่งสัญญาณ</p>
         </div>
 
         <div id="cam-container">
-            <div class="overlay-top">
-                <div class="ctrl-btns">
-                    <button class="ctrl-btn" onclick="location.reload()">⏹ STOP</button>
-                </div>
-                <div id="stats-panel">
-                    <div style="color:#aaa; border-bottom:1px solid #333; margin-bottom:5px; padding-bottom:3px;">NETWORK MONITOR</div>
-                    <div class="stat-item">FPS: <span id="stat-fps" class="stat-val status-ok">--</span></div>
-                    <div class="stat-item">BITRATE: <span id="stat-bitrate" class="stat-val status-ok">--</span></div>
-                    <div class="stat-item">LOSS: <span id="stat-loss" class="stat-val status-ok">0%</span></div>
-                </div>
+            <button id="back-btn" onclick="location.reload()">❌ หยุดไลฟ์</button>
+            <div class="mini-stats">
+                <span>📡 FHD 1080p</span>
+                <span id="live-status">● กำลังส่งสัญญาณ</span>
             </div>
             <iframe id="stream-frame" allow="camera;microphone;fullscreen;display-capture;autoplay"></iframe>
         </div>
@@ -85,30 +78,29 @@
         function toggleStableMode() {
             let check = document.getElementById("stableCheck");
             let title = document.getElementById("modeTitle");
+            let desc = document.getElementById("modeDesc");
             check.checked = !check.checked;
             title.innerText = check.checked ? "โหมดกันตาย (Stable)" : "โหมดปกติ (HQ)";
             title.style.color = check.checked ? "#28a745" : "white";
+            desc.innerText = check.checked ? "720p 30fps | เน้นลื่นไหล" : "1080p 60fps | คมชัดสูงสุด";
         }
 
         function startStream(camId) {
             let isStable = document.getElementById("stableCheck").checked;
             
-            // เพิ่ม &stats=1 เพื่อเปิดกราฟของ VDO.Ninja เองด้วย (กราฟจะทับบนภาพเล็กน้อย)
-            // &meter=1 เพิ่มแถบมิเตอร์ระดับความแรงเน็ต
-            let monitorParams = "&stats=1&meter=1";
+            // ลบ &stats=1 ออกแล้วเพื่อไม่ให้บังจอ
+            // เพิ่ม &meter=1 (แถบเล็กๆ ด้านข้าง ไม่บังภาพ)
+            let baseParams = "&width=1920&height=1080&videobitrate=8000&quality=0&denoise=0&scale=100&select&meter=1";
             
-            let qualityParams = isStable 
-                ? "&width=1280&height=720&framerate=30&maxbitrate=2500&quality=1&buffer=2000" 
-                : "&width=1920&height=1080&framerate=60&videobitrate=8000&quality=0&denoise=0&scale=100&buffer=300";
+            if (isStable) {
+                baseParams = "&width=1280&height=720&framerate=30&maxbitrate=2500&quality=1&buffer=2000&select&meter=1";
+            }
 
-            let streamUrl = "https://vdo.ninja/?push=" + camId + "&room=CM108_NewsRoom" + qualityParams + monitorParams + "&pwa&autostart&label=" + camId + "&select&fov=0"; 
+            let streamUrl = "https://vdo.ninja/?push=" + camId + "&room=CM108_NewsRoom" + baseParams + "&pwa&autostart&label=" + camId; 
 
             document.getElementById('stream-frame').src = streamUrl;
             document.getElementById('lobby').style.display = 'none';
             document.getElementById('cam-container').style.display = 'block';
-            
-            // เริ่มต้นระบบจำลองการอ่านค่า (หรือใช้กราฟจาก VDO.Ninja โดยตรง)
-            // หมายเหตุ: การดึงค่าจาก iframe ข้ามโดเมนทำได้ยาก แต่เราใช้ &stats=1 ของ VDO.Ninja มาแสดงผลแทนได้เลย
         }
     </script>
 </body>
