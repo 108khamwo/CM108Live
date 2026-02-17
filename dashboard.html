@@ -2,60 +2,42 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <title>CM108 MASTER CONTROL</title>
+    <title>CM108 MCR PRO</title>
     <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;500;700&display=swap" rel="stylesheet">
     <style>
         body { margin: 0; background: #000; color: white; font-family: 'Prompt', sans-serif; height: 100vh; display: grid; grid-template-rows: 60px 1fr 80px; overflow: hidden; }
         
-        /* HEADER */
         header { background: #111; border-bottom: 2px solid #ff3b30; display: flex; align-items: center; justify-content: space-between; padding: 0 25px; }
         .logo { font-size: 20px; font-weight: bold; }
         .logo span { color: #ff3b30; }
-        .status-box { display: flex; gap: 20px; font-size: 13px; color: #aaa; }
-        .led { width: 10px; height: 10px; background: #0f0; border-radius: 50%; display: inline-block; box-shadow: 0 0 10px #0f0; }
+        .status { font-size: 13px; color: #888; }
 
-        /* MAIN MONITOR */
         main { position: relative; background: #000; }
         iframe { width: 100%; height: 100%; border: none; }
         
-        /* FOOTER CONTROLS */
         footer { background: #1a1a1a; border-top: 1px solid #333; padding: 0 20px; display: flex; align-items: center; gap: 15px; }
         
-        .control-group { display: flex; align-items: center; gap: 10px; background: #222; padding: 8px 15px; border-radius: 8px; border: 1px solid #333; flex-grow: 1; }
-        
+        .chat-box { flex-grow: 1; display: flex; gap: 10px; background: #222; padding: 10px; border-radius: 8px; border: 1px solid #333; }
         select { background: #333; color: white; border: none; padding: 10px; border-radius: 5px; font-family: 'Prompt'; }
         input { background: transparent; border: none; color: white; flex-grow: 1; font-size: 16px; font-family: 'Prompt'; }
         input:focus { outline: none; }
-        
-        .send-btn { background: #ff3b30; color: white; border: none; padding: 10px 25px; border-radius: 5px; font-weight: bold; cursor: pointer; }
-        .send-btn:hover { background: #d32f2f; }
-        
-        /* Monitor Overlay */
-        .net-monitor { position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.8); padding: 10px; border-radius: 8px; font-size: 12px; border: 1px solid #444; }
+        button { background: #ff3b30; color: white; border: none; padding: 10px 25px; border-radius: 5px; font-weight: bold; cursor: pointer; }
     </style>
 </head>
 <body>
 
     <header>
         <div class="logo">CM108 <span>MCR SYSTEM</span></div>
-        <div class="status-box">
-            <div><span class="led"></span> ONLINE</div>
-            <div>ROOM: CM108_NewsRoom</div>
-        </div>
+        <div class="status">● ONLINE : CM108_NewsRoom</div>
     </header>
 
     <main>
-        <iframe id="mcr-frame" allow="camera;microphone;fullscreen;display-capture;autoplay" 
+        <iframe id="mcr" allow="camera;microphone;fullscreen;display-capture;autoplay" 
                 src="https://vdo.ninja/?director=CM108_NewsRoom&quality=0&cleanoutput=1&hidelinks=1&hideheader=1&noheader=1"></iframe>
-        
-        <div class="net-monitor">
-            📡 Network Monitor: Active<br>
-            <span style="color:#666">ตรวจสอบเฟรมเรตที่มุมจอกล้องแต่ละตัว</span>
-        </div>
     </main>
 
     <footer>
-        <div class="control-group">
+        <div class="chat-box">
             <span style="font-size:20px;">💬</span>
             <select id="target">
                 <option value="all">ส่งหาทุกกล้อง</option>
@@ -64,22 +46,24 @@
                 <option value="CM108_Cam3">CAM 03</option>
                 <option value="CM108_Cam4">CAM 04</option>
             </select>
-            <input type="text" id="msg" placeholder="พิมพ์ข้อความสั่งการ... (Enter เพื่อส่ง)" onkeydown="if(event.key === 'Enter') sendMsg()">
-            <button class="send-btn" onclick="sendMsg()">ส่งข้อความ</button>
+            <input type="text" id="msg" placeholder="พิมพ์ข้อความสั่งการ... (Enter เพื่อส่ง)" onkeydown="if(event.key === 'Enter') send()">
+            <button onclick="send()">ส่งข้อความ</button>
         </div>
     </footer>
 
     <script>
-        function sendMsg() {
+        function send() {
             const input = document.getElementById('msg');
             const target = document.getElementById('target').value;
             const text = input.value.trim();
-            const frame = document.getElementById('mcr-frame').contentWindow;
+            const frame = document.getElementById('mcr').contentWindow;
 
             if (!text) return;
 
-            const payload = { "msg": "chat", "content": text };
-            if (target !== 'all') payload.to = target;
+            // แก้ไข: ใช้ function "sendChat" เพื่อกระตุ้นระบบแชทของ Ninja โดยตรง
+            // วิธีนี้ชัวร์กว่าการส่ง msg:chat แบบเดิม
+            const payload = { "function": "sendChat", "value": text };
+            if (target !== 'all') payload.target = target; // ถ้าส่งรายตัว
 
             frame.postMessage(payload, '*');
             
