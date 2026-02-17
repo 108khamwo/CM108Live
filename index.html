@@ -6,22 +6,15 @@
     <title>CM108 Mobile Unit</title>
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        :root { --red: #ff3b30; --green: #28a745; }
         body, html { margin: 0; padding: 0; height: 100vh; background: #000; color: white; font-family: 'Sarabun', sans-serif; overflow: hidden; }
-        
-        /* หน้าเลือกกล้อง */
-        #lobby { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; padding: 20px; text-align: center; }
-        h1 { font-size: 24px; color: var(--red); margin-bottom: 25px; letter-spacing: 1px; }
+        #lobby { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; padding: 20px; }
+        h1 { font-size: 24px; color: #ff3b30; margin-bottom: 30px; }
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; width: 100%; max-width: 400px; }
-        .cam-btn { background: #1a1a1a; border: 1px solid #444; color: white; padding: 20px; border-radius: 12px; cursor: pointer; font-size: 18px; font-weight: bold; }
-        
-        /* หน้าส่งสัญญาณ */
-        #cam-container { display: none; width: 100%; height: 100%; position: relative; }
+        .btn { background: #1a1a1a; border: 1px solid #444; color: white; padding: 20px; border-radius: 15px; cursor: pointer; font-size: 18px; font-weight: bold; }
+        #cam-area { display: none; width: 100%; height: 100%; position: relative; }
         iframe { width: 100%; height: 100%; border: none; }
-        
-        /* ปุ่มหยุด (ย้ายลงล่างเพื่อไม่ให้ทับกับ Chat) */
-        .bottom-bar { position: absolute; bottom: 20px; left: 0; right: 0; display: flex; justify-content: center; z-index: 1000; }
-        .stop-btn { background: var(--red); color: white; border: none; padding: 10px 25px; border-radius: 30px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
+        .ui-overlay { position: absolute; bottom: 20px; left: 0; right: 0; display: flex; justify-content: center; z-index: 1000; }
+        .stop-live { background: #ff3b30; color: white; border: none; padding: 12px 30px; border-radius: 50px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
     </style>
 </head>
 <body>
@@ -29,31 +22,30 @@
     <div id="lobby">
         <h1>🔴 CM108 LIVE</h1>
         <div class="grid">
-            <button class="cam-btn" onclick="startStream('CM108_Cam1')">กล้อง 1</button>
-            <button class="cam-btn" onclick="startStream('CM108_Cam2')">กล้อง 2</button>
-            <button class="cam-btn" onclick="startStream('CM108_Cam3')">กล้อง 3</button>
-            <button class="cam-btn" onclick="startStream('CM108_Cam4')">กล้อง 4</button>
+            <button class="btn" onclick="start('CM108_Cam1')">กล้อง 1</button>
+            <button class="btn" onclick="start('CM108_Cam2')">กล้อง 2</button>
+            <button class="btn" onclick="start('CM108_Cam3')">กล้อง 3</button>
+            <button class="btn" onclick="start('CM108_Cam4')">กล้อง 4</button>
         </div>
     </div>
 
-    <div id="cam-container">
-        <iframe id="stream-frame" allow="camera;microphone;fullscreen;display-capture;autoplay"></iframe>
-        <div class="bottom-bar">
-            <button class="stop-btn" onclick="location.reload()">⏹ หยุดส่งสัญญาณ</button>
+    <div id="cam-area">
+        <iframe id="vid-frame" allow="camera;microphone;fullscreen;display-capture;autoplay"></iframe>
+        <div class="ui-overlay">
+            <button class="stop-live" onclick="location.reload()">⏹ หยุดส่งสัญญาณ</button>
         </div>
     </div>
 
     <script>
-        function startStream(camId) {
-            // &viewchat=1 : บังคับแสดงข้อความที่เด้งมาจาก Dashboard
-            // &chat=1 : เปิดระบบรับส่งข้อความ
-            // &clean=1 : ลบเมนู VDO.Ninja ออกทั้งหมด
-            let params = "&width=1920&height=1080&videobitrate=8000&quality=0&chat=1&viewchat=1&clean=1&hidelinks=1&pwa=1";
-            let url = "https://vdo.ninja/?push=" + camId + "&room=CM108_NewsRoom" + params + "&autostart&label=" + camId + "&select";
+        function start(id) {
+            // &chat=1 &viewchat=1 : บังคับให้ข้อความแชทเด้งขึ้นหน้าจอ
+            // &clean=1 : ลบเมนูรกๆ ของระบบออก
+            let config = "&width=1920&height=1080&videobitrate=8000&quality=0&chat=1&viewchat=1&clean=1&hidelinks=1&pwa=1";
+            let url = "https://vdo.ninja/?push=" + id + "&room=CM108_NewsRoom" + config + "&autostart&label=" + id + "&select";
             
-            document.getElementById('stream-frame').src = url;
+            document.getElementById('vid-frame').src = url;
             document.getElementById('lobby').style.display = 'none';
-            document.getElementById('cam-container').style.display = 'block';
+            document.getElementById('cam-area').style.display = 'block';
         }
     </script>
 </body>
