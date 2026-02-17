@@ -3,97 +3,119 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>CM108 Mobile Unit - Final Fix</title>
+    <title>CM108 Mobile Unit - Pro Fix</title>
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;700&display=swap" rel="stylesheet">
     <style>
         :root { --red: #ff3b30; --green: #28a745; --bg: #000; }
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: var(--bg); color: white; font-family: 'Sarabun', sans-serif; overflow: hidden; position: fixed; }
         
         /* หน้าเลือกกล้อง */
-        #lobby { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; padding: 20px; box-sizing: border-box; z-index: 10; position: relative; }
-        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; width: 100%; max-width: 400px; }
-        .btn { background: #1a1a1a; border: 1px solid #444; color: white; padding: 20px; border-radius: 12px; font-size: 18px; font-weight: bold; cursor: pointer; }
+        #lobby { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; padding: 20px; box-sizing: border-box; }
+        h1 { font-size: 26px; color: var(--red); margin-bottom: 20px; text-transform: uppercase; }
 
-        /* พื้นที่วิดีโอ */
-        #cam-area { display: none; width: 100%; height: 100%; position: absolute; top: 0; left: 0; }
+        .config-section { width: 100%; max-width: 350px; display: flex; flex-direction: column; gap: 10px; margin-bottom: 25px; }
+        .mode-btn { background: #1a1a1a; border: 1px solid #333; padding: 12px 15px; border-radius: 12px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; }
+        
+        /* สวิตช์ */
+        .switch { position: relative; width: 44px; height: 24px; pointer-events: none; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; inset: 0; background: #444; border-radius: 24px; transition: .4s; }
+        .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background: white; border-radius: 50%; transition: .4s; }
+        input:checked + .slider { background: var(--green); }
+        input:checked + .slider:before { transform: translateX(20px); }
+
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; width: 100%; max-width: 350px; }
+        .cam-btn { background: #1a1a1a; border: 1px solid #444; color: white; padding: 20px 5px; border-radius: 12px; font-size: 16px; font-weight: bold; cursor: pointer; }
+
+        /* หน้าไลฟ์สด */
+        #cam-area { display: none; width: 100%; height: 100%; position: relative; }
         iframe { width: 100%; height: 100%; border: none; z-index: 1; }
 
-        /* แถบแจ้งเตือนข้อความ (ใหม่! บังคับเด้งบนจอ) */
-        #msg-display {
-            position: absolute; top: 70px; left: 20px; right: 20px; 
-            background: rgba(255, 59, 48, 0.9); color: white; padding: 15px; 
-            border-radius: 10px; font-weight: bold; text-align: center;
-            display: none; z-index: 10000; box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-            animation: slideDown 0.3s ease-out;
+        /* เลเยอร์ข้อความแจ้งเตือน (สูงสุด) */
+        #msg-box {
+            position: absolute; top: 20%; left: 10%; right: 10%; 
+            background: rgba(255, 59, 48, 0.95); color: white; padding: 20px; 
+            border-radius: 15px; font-size: 20px; font-weight: bold; text-align: center;
+            z-index: 10000; display: none; box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+            border: 2px solid white; pointer-events: none;
         }
-        @keyframes slideDown { from { transform: translateY(-20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 
-        /* แผงควบคุม (แยกเลเยอร์ชัดเจน ไม่ซ้อนทับ) */
-        .live-controls {
-            position: absolute; bottom: 30px; left: 0; right: 0;
-            display: flex; justify-content: center; gap: 10px;
-            z-index: 10000; /* ต้องสูงกว่าวิดีโอ */
-            pointer-events: none; /* เพื่อให้ส่วนว่างๆ จิ้มผ่านได้ */
+        /* เลเยอร์ปุ่มควบคุม (อยู่เหนือวิดีโอ) */
+        .controls-layer {
+            position: absolute; inset: 0; 
+            display: flex; flex-direction: column; justify-content: flex-end;
+            padding-bottom: 30px; z-index: 9999; pointer-events: none;
         }
-        .live-controls button { pointer-events: auto; } /* ให้ปุ่มจิ้มได้ปกติ */
-        
-        .action-btn { background: rgba(0,0,0,0.8); color: white; border: 1px solid #555; width: 55px; height: 55px; border-radius: 50%; font-size: 20px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
-        .stop-btn { background: var(--red); border: none; padding: 0 25px; border-radius: 30px; color: white; font-weight: bold; height: 55px; cursor: pointer; }
-        
-        /* โหมดประหยัดพลังงาน */
-        #power-save { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 9999; pointer-events: none; }
+        .btn-row { display: flex; justify-content: center; gap: 15px; pointer-events: auto; }
+        .tool-btn { background: rgba(0,0,0,0.7); color: white; border: 1px solid #555; width: 55px; height: 55px; border-radius: 50%; font-size: 22px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .stop-btn { background: var(--red); color: white; border: none; padding: 0 30px; border-radius: 30px; font-weight: bold; height: 55px; cursor: pointer; }
+
+        /* เอฟเฟกต์ประหยัดพลังงาน */
+        #ps-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 9998; pointer-events: none; }
     </style>
 </head>
 <body>
 
-    <div id="msg-display"></div>
-    <div id="power-save"></div>
+    <div id="msg-box"></div>
+    <div id="ps-overlay"></div>
 
     <div id="lobby">
-        <h1 style="color:var(--red)">🔴 CM108 LIVE</h1>
-        <div style="background:#111; padding:15px; border-radius:12px; margin-bottom:20px; width:100%; max-width:320px;">
-            <label style="display:flex; align-items:center; justify-content:space-between; cursor:pointer;">
-                <span>โหมดป้องกันตาย/ประหยัดไฟ</span>
-                <input type="checkbox" id="mode-opt" style="width:20px; height:20px;">
-            </label>
+        <h1>🔴 CM108 LIVE</h1>
+        
+        <div class="config-section">
+            <div class="mode-btn" onclick="document.getElementById('st').click()">
+                <div style="text-align:left;"><strong>โหมดป้องกันตาย</strong><br><small style="color:#888">เน้นลื่นไหล (720p + Buffer)</small></div>
+                <label class="switch"><input type="checkbox" id="st"><span class="slider"></span></label>
+            </div>
+            <div class="mode-btn" onclick="document.getElementById('ps').click()">
+                <div style="text-align:left;"><strong>โหมดประหยัดพลังงาน</strong><br><small style="color:#888">ลดแสงและเฟรมเรต</small></div>
+                <label class="switch"><input type="checkbox" id="ps"><span class="slider"></span></label>
+            </div>
         </div>
+
         <div class="grid">
-            <button class="btn" onclick="start('CM108_Cam1')">กล้อง 1</button>
-            <button class="btn" onclick="start('CM108_Cam2')">กล้อง 2</button>
-            <button class="btn" onclick="start('CM108_Cam3')">กล้อง 3</button>
-            <button class="btn" onclick="start('CM108_Cam4')">กล้อง 4</button>
+            <button class="cam-btn" onclick="start('CM108_Cam1')">กล้อง 1</button>
+            <button class="cam-btn" onclick="start('CM108_Cam2')">กล้อง 2</button>
+            <button class="cam-btn" onclick="start('CM108_Cam3')">กล้อง 3</button>
+            <button class="cam-btn" onclick="start('CM108_Cam4')">กล้อง 4</button>
         </div>
     </div>
 
     <div id="cam-area">
         <iframe id="vid" allow="camera;microphone;fullscreen;display-capture;autoplay"></iframe>
-        <div class="live-controls">
-            <button class="action-btn" onclick="cmd('muteAudio')">🎙️</button>
-            <button class="action-btn" onclick="cmd('cycleVideo')">🔄</button>
-            <button class="stop-btn" onclick="location.reload()">⏹ หยุดไลฟ์</button>
+        <div class="controls-layer">
+            <div class="btn-row">
+                <button class="tool-btn" onclick="cmd('muteAudio')">🎙️</button>
+                <button class="tool-btn" onclick="cmd('cycleVideo')">🔄</button>
+                <button class="stop-btn" onclick="location.reload()">⏹ หยุดส่ง</button>
+            </div>
         </div>
     </div>
 
     <script>
         function start(id) {
-            let opt = document.getElementById("mode-opt").checked;
-            let res = opt ? "&width=1280&height=720&buffer=2000" : "&width=1920&height=1080&videobitrate=8000";
-            if(opt) document.getElementById('power-save').style.display = 'block';
+            let st = document.getElementById('st').checked;
+            let ps = document.getElementById('ps').checked;
+            
+            // แยกพารามิเตอร์ตามโหมด
+            let res = st ? "&width=1280&height=720&buffer=2000" : "&width=1920&height=1080&videobitrate=8000";
+            let fps = ps ? "&framerate=24" : "&framerate=60";
+            if(ps) document.getElementById('ps-overlay').style.display = 'block';
 
-            // เพิ่ม &chat=1 และ &viewchat=1
-            let url = "https://vdo.ninja/?push=" + id + "&room=CM108_NewsRoom" + res + "&chat=1&viewchat=1&clean&hidelinks&autostart&label=" + id;
+            // &api=1 เพื่อดักจับข้อความแชท
+            let url = "https://vdo.ninja/?push=" + id + "&room=CM108_NewsRoom" + res + fps + "&chat=1&viewchat=1&clean&hidelinks&api=1&autostart&label=" + id;
             
             document.getElementById('vid').src = url;
             document.getElementById('lobby').style.display = 'none';
             document.getElementById('cam-area').style.display = 'block';
 
-            // ระบบดักฟังข้อความจาก Dashboard
+            // ระบบแจ้งเตือนข้อความฉุกเฉิน
             window.addEventListener('message', function(e) {
-                if (e.data.msg === 'chat') {
-                    let display = document.getElementById('msg-display');
-                    display.innerText = "คำสั่ง: " + e.data.content;
-                    display.style.display = 'block';
-                    setTimeout(() => { display.style.display = 'none'; }, 7000); // โชว์ 7 วินาที
+                if (e.data.msg === 'chat' || e.data.action === 'chat') {
+                    let m = document.getElementById('msg-box');
+                    m.innerText = "⚠️ " + (e.data.content || e.data.value);
+                    m.style.display = 'block';
+                    setTimeout(() => { m.style.display = 'none'; }, 8000);
                 }
             });
         }
