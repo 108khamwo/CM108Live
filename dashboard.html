@@ -2,26 +2,119 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <title>CM108 Master Control</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CM108 Master Control Room</title>
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;700&display=swap" rel="stylesheet">
     <style>
-        body { margin: 0; padding: 0; background-color: #000; color: #fff; font-family: sans-serif; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
-        header { height: 50px; background: #111; border-bottom: 2px solid #ff3b30; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.5); }
-        .logo { font-size: 18px; font-weight: bold; letter-spacing: 1px; }
-        .logo span { color: #ff3b30; }
-        .status { font-size: 11px; color: #0f0; background: rgba(0,255,0,0.1); padding: 4px 10px; border-radius: 4px; }
-        #main-view { flex-grow: 1; width: 100%; height: calc(100vh - 50px); }
-        iframe { width: 100%; height: 100%; border: none; }
+        :root {
+            --primary-color: #ff3b30;
+            --bg-dark: #0a0a0a;
+            --panel-bg: #161616;
+            --text-main: #ffffff;
+            --text-dim: #888888;
+            --success: #28a745;
+        }
+
+        body, html {
+            margin: 0; padding: 0; height: 100%;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            font-family: 'Sarabun', sans-serif;
+            overflow: hidden;
+        }
+
+        /* ส่วนหัวของสถานี */
+        header {
+            height: 60px;
+            background: var(--panel-bg);
+            border-bottom: 2px solid var(--primary-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 25px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            z-index: 100;
+        }
+
+        .brand { display: flex; align-items: center; gap: 15px; }
+        .logo-box {
+            background: var(--primary-color);
+            color: white;
+            padding: 5px 12px;
+            font-weight: bold;
+            border-radius: 4px;
+            letter-spacing: 1px;
+        }
+        .station-name { font-size: 18px; font-weight: 500; }
+        .station-name span { color: var(--text-dim); font-size: 14px; margin-left: 10px; }
+
+        /* แถบสถานะระบบ */
+        .system-status { display: flex; gap: 20px; align-items: center; }
+        .indicator { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-dim); }
+        .dot { width: 8px; height: 8px; background: var(--success); border-radius: 50%; box-shadow: 0 0 10px var(--success); }
+
+        /* พื้นที่แสดงผลหลัก */
+        main {
+            height: calc(100vh - 60px);
+            width: 100%;
+            background: #000;
+            position: relative;
+        }
+
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            /* ปรับความสว่างและสีให้ดูคมชัดขึ้น */
+            filter: contrast(1.05) brightness(1.05);
+        }
+
+        /* แถบแจ้งเตือนด้านล่าง */
+        footer {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            background: rgba(0,0,0,0.7);
+            padding: 5px 20px;
+            font-size: 11px;
+            color: var(--text-dim);
+            backdrop-filter: blur(5px);
+            display: flex;
+            justify-content: space-between;
+            box-sizing: border-box;
+        }
     </style>
 </head>
 <body>
+
     <header>
-        <div class="logo">CM108 <span>MASTER CONTROL</span></div>
-        <div class="status">● SERVER ONLINE | ROOM: CM108_NewsRoom</div>
+        <div class="brand">
+            <div class="logo-box">CM108</div>
+            <div class="station-name">ห้องควบคุมสถานี <span>| ระบบถ่ายทอดสดนอกสถานที่</span></div>
+        </div>
+
+        <div class="system-status">
+            <div class="indicator">
+                <div class="dot"></div>
+                สถานะระบบ: ออนไลน์
+            </div>
+            <div class="indicator" style="color: var(--text-main); font-weight: bold;">
+                ห้องควบคุม: CM108_NewsRoom
+            </div>
+        </div>
     </header>
-    <div id="main-view">
-        <iframe allow="camera;microphone;fullscreen;display-capture;autoplay" 
-                src="https://vdo.ninja/?director=CM108_NewsRoom&quality=0">
+
+    <main>
+        <iframe 
+            allow="camera;microphone;fullscreen;display-capture;autoplay" 
+            src="https://vdo.ninja/?director=CM108_NewsRoom&quality=0&cleanoutput=0">
         </iframe>
-    </div>
+    </main>
+
+    <footer>
+        <div>ลิขสิทธิ์ระบบควบคุมภายใน CM108Live v3.0</div>
+        <div>ความละเอียดเป้าหมาย: 1080p60 | โปรโตคอล: WebRTC (Secure)</div>
+    </footer>
+
 </body>
 </html>
