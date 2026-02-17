@@ -2,105 +2,69 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <title>CM108 PRO SWITCHER - MCR</title>
+    <title>CM108 PRO SWITCHER v5.0</title>
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        :root { --primary: #ff3b30; --bg: #050505; --panel: #111; --text: #eee; }
-        body, html { margin: 0; padding: 0; height: 100%; background: var(--bg); color: var(--text); font-family: 'Sarabun', sans-serif; overflow: hidden; }
-        
-        .wrapper { display: grid; grid-template-rows: 50px 1fr 80px; height: 100vh; }
-        
+        :root { --primary: #ff3b30; --bg: #000; --panel: #111; }
+        body, html { margin: 0; padding: 0; height: 100vh; background: var(--bg); color: #eee; font-family: 'Sarabun', sans-serif; overflow: hidden; }
+        .wrapper { display: grid; grid-template-rows: 55px 1fr 110px; height: 100vh; }
         header { background: var(--panel); border-bottom: 1px solid #333; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; }
-        .logo { font-size: 18px; font-weight: bold; color: var(--primary); }
-        .logo span { color: #fff; font-weight: normal; margin-left: 10px; opacity: 0.7; }
-
-        /* พื้นที่จอวิดีโอ (ล้างความรกออก) */
+        .logo { font-size: 20px; font-weight: bold; color: var(--primary); }
         main { background: #000; position: relative; }
         iframe { width: 100%; height: 100%; border: none; }
-
-        /* แถบควบคุมข้อความด้านล่าง (Smart Control Bar) */
-        .control-bar { 
-            background: #1a1a1a; border-top: 1px solid #444; 
-            display: flex; align-items: center; gap: 15px; padding: 0 20px; 
-            box-shadow: 0 -5px 15px rgba(0,0,0,0.5);
-        }
-        
-        .target-select {
-            background: #333; color: white; border: 1px solid #555;
-            padding: 10px; border-radius: 8px; font-family: 'Sarabun', sans-serif;
-        }
-
-        .chat-input {
-            flex-grow: 1; background: #000; border: 1px solid var(--primary);
-            color: #fff; padding: 12px 20px; border-radius: 8px;
-            font-family: 'Sarabun', sans-serif; font-size: 16px;
-        }
-        .chat-input:focus { outline: none; box-shadow: 0 0 10px rgba(255, 59, 48, 0.3); }
-
-        .hint { font-size: 11px; color: #666; }
+        .control-bar { background: #1a1a1a; border-top: 1px solid #444; padding: 10px 20px; display: flex; flex-direction: column; gap: 8px; }
+        .chat-row { display: flex; align-items: center; gap: 15px; }
+        .q-btn { background: #333; color: #ccc; border: 1px solid #444; padding: 5px 12px; border-radius: 5px; font-size: 12px; cursor: pointer; }
+        .q-btn:hover { background: var(--primary); color: white; }
+        .target-select { background: #333; color: white; border: 1px solid #555; padding: 8px; border-radius: 8px; font-family: 'Sarabun'; }
+        .chat-input { flex-grow: 1; background: #000; border: 1px solid var(--primary); color: #fff; padding: 10px 15px; border-radius: 8px; font-size: 15px; font-family: 'Sarabun'; }
     </style>
 </head>
 <body>
-
 <div class="wrapper">
     <header>
-        <div class="logo">CM108 <span>PRO SWITCHER v4.0</span></div>
-        <div id="connection-status" style="font-size: 12px; color: #0f0;">● ระบบเชื่อมต่อพร้อมใช้งาน</div>
+        <div class="logo">CM108 <span>PRO SWITCHER</span></div>
+        <div style="font-size: 12px; color: #0f0;">● ห้องข่าว: CM108_NewsRoom</div>
     </header>
-
     <main>
         <iframe id="vdoframe" allow="camera;microphone;fullscreen;display-capture;autoplay" 
-                src="https://vdo.ninja/?director=CM108_NewsRoom&quality=0&hidelinks&hideheader"></iframe>
+                src="https://vdo.ninja/?director=CM108_NewsRoom&quality=0&hidelinks=1&hideheader=1&noheader=1&cleanoutput=1"></iframe>
     </main>
-
     <footer class="control-bar">
-        <div style="font-size: 14px; color: var(--primary); font-weight: bold;">💬 ส่งคำสั่ง:</div>
-        
-        <select id="targetCam" class="target-select">
-            <option value="all">ส่งให้ทุกคน (All)</option>
-            <option value="CM108_Cam1">กล้อง 1 (Main)</option>
-            <option value="CM108_Cam2">กล้อง 2 (Mobile)</option>
-            <option value="CM108_Cam3">กล้อง 3 (Wide)</option>
-            <option value="CM108_Cam4">กล้อง 4 (Drone)</option>
-        </select>
-
-        <input type="text" id="chatInput" class="chat-input" 
-               placeholder="พิมพ์ข้อความที่นี่แล้วกด Enter เพื่อส่ง..." 
-               onkeydown="if(event.key === 'Enter') sendMessage()">
-
-        <div class="hint">กด <b>Enter</b> เพื่อส่งด่วน</div>
+        <div style="display:flex; gap:8px;">
+            <span style="font-size:11px; color:#666;">ส่งด่วน: </span>
+            <button class="q-btn" onclick="sendQuick('เตรียมตัว... เข้าสัญญาณใน 3-2-1')">นับถอยหลัง</button>
+            <button class="q-btn" onclick="sendQuick('แพนกล้องไปทางซ้ายหน่อยครับ')">สั่งแพนซ้าย</button>
+            <button class="q-btn" onclick="sendQuick('เช็คเน็ตด่วน! ภาพเริ่มกระตุก')">เตือนสัญญาณ</button>
+            <button class="q-btn" onclick="sendQuick('จบช่วงนี้แล้ว พักเบรกได้ครับ')">จบช่วง</button>
+        </div>
+        <div class="chat-row">
+            <select id="targetCam" class="target-select">
+                <option value="all">ส่งหาทุกคน (All)</option>
+                <option value="CM108_Cam1">กล้อง 1</option>
+                <option value="CM108_Cam2">กล้อง 2</option>
+                <option value="CM108_Cam3">กล้อง 3</option>
+                <option value="CM108_Cam4">กล้อง 4</option>
+            </select>
+            <input type="text" id="chatInput" class="chat-input" placeholder="พิมพ์ข้อความที่นี่แล้วกด Enter..." onkeydown="if(event.key === 'Enter') sendMessage()">
+        </div>
     </footer>
 </div>
-
 <script>
     function sendMessage() {
         const input = document.getElementById('chatInput');
-        const target = document.getElementById('targetCam').value;
-        const msg = input.value.trim();
-        const frame = document.getElementById('vdoframe');
-
-        if (!msg) return;
-
-        // ระบบส่งข้อความอัจฉริยะผ่าน postMessage API ของ VDO.Ninja
-        // ไม่ต้องคัดลอกวางเอง ระบบจะยิงตรงเข้า Iframe ทันที
-        const payload = {
-            msg: "chat",
-            content: msg
-        };
-
-        // ถ้าเลือกส่งรายคน ให้ระบุ ID
-        if (target !== 'all') {
-            payload.to = target;
-        }
-
-        frame.contentWindow.postMessage(payload, '*');
-
-        // ล้างช่องพิมพ์และทำให้ดูเหมือนมีการส่งสำเร็จ
+        sendToNinja(input.value.trim());
         input.value = '';
-        input.style.borderColor = '#28a745';
-        setTimeout(() => { input.style.borderColor = '#ff3b30'; }, 500);
+    }
+    function sendQuick(text) { sendToNinja(text); }
+    function sendToNinja(msg) {
+        if (!msg) return;
+        const target = document.getElementById('targetCam').value;
+        const frame = document.getElementById('vdoframe');
+        const payload = { "msg": "chat", "content": msg };
+        if (target !== 'all') { payload.to = target; }
+        frame.contentWindow.postMessage(payload, '*');
     }
 </script>
-
 </body>
 </html>
