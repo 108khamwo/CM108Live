@@ -8,9 +8,13 @@
     <style>
         /* Base Reset */
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; }
-        body, html { margin: 0; padding: 0; width: 100%; height: 100dvh; background: #000; overflow: hidden; font-family: 'Prompt', sans-serif; }
+        
+        body, html { 
+            margin: 0; padding: 0; width: 100%; height: 100dvh; /* ใช้ Dynamic Height แก้จอ iPhone/Android */
+            background: #000; overflow: hidden; font-family: 'Prompt', sans-serif; 
+        }
 
-        /* --- LOBBY (หน้าตั้งค่าก่อนเริ่ม) --- */
+        /* --- LOBBY (หน้าเลือก) --- */
         #lobby { 
             position: absolute; inset: 0; z-index: 100; background: #0a0a0a; 
             display: flex; flex-direction: column; padding: 20px; 
@@ -30,20 +34,31 @@
         .c-card strong { display: block; font-size: 18px; color: white; margin-bottom: 5px; }
 
         /* --- LIVE VIEW --- */
-        #live-layer { display: none; position: fixed; inset: 0; background: #000; z-index: 50; }
+        #live-layer { 
+            display: none; position: fixed; inset: 0; background: #000; z-index: 50;
+            /* สำคัญ: เว้นขอบล่างไว้เพื่อให้ปุ่ม Ninja ไม่ตกขอบ */
+            padding-bottom: env(safe-area-inset-bottom, 20px); 
+        }
         
         /* Zoom Wrapper */
-        #zoom-wrap { width: 100%; height: 100%; transform-origin: center; transition: transform 0.1s linear; }
-        iframe { width: 100%; height: 100%; border: none; }
+        #zoom-wrap { 
+            width: 100%; height: 100%; /* ให้เต็มพื้นที่ที่เหลือ */
+            transform-origin: center; transition: transform 0.1s linear; 
+            position: relative;
+        }
+        iframe { width: 100%; height: 100%; border: none; display: block; }
 
-        /* UI Overlay (สำคัญ: pointer-events: none เพื่อให้จิ้มทะลุไปโดนปุ่ม Ninja) */
-        .ui-overlay { position: absolute; inset: 0; pointer-events: none; }
+        /* UI Overlay (ลอยอยู่ด้านบน) */
+        .ui-overlay { 
+            position: absolute; inset: 0; pointer-events: none; /* จิ้มทะลุได้ */
+            padding-bottom: env(safe-area-inset-bottom, 20px);
+        }
 
         /* Top Bar */
         .top-bar { 
             position: absolute; top: 0; left: 0; right: 0;
             padding: 10px; display: flex; justify-content: space-between; align-items: flex-start; 
-            pointer-events: auto; /* เปิดให้กดปุ่มมุมบนได้ */
+            pointer-events: auto; background: linear-gradient(to bottom, rgba(0,0,0,0.6), transparent);
         }
         .status { background: rgba(255,0,0,0.8); color: white; padding: 4px 10px; border-radius: 4px; font-size: 11px; font-weight: bold; }
         
@@ -56,17 +71,17 @@
         }
         @keyframes popDown { from {transform: translate(-50%, -20px); opacity:0;} to {transform: translate(-50%, 0); opacity:1;} }
 
-        /* RIGHT TOOLS (เครื่องมือเสริม ลอยมุมขวาบน ไม่บังข้างล่าง) */
+        /* RIGHT TOOLS (ลอยมุมขวาบน) */
         .right-mini-tools {
             position: absolute; right: 10px; top: 60px;
-            display: flex; flex-direction: column; gap: 10px; align-items: center;
+            display: flex; flex-direction: column; gap: 15px; align-items: center;
             pointer-events: auto; 
-            background: rgba(0,0,0,0.4); padding: 10px 5px; border-radius: 20px;
+            background: rgba(0,0,0,0.4); padding: 15px 5px; border-radius: 20px;
             backdrop-filter: blur(5px); border: 1px solid rgba(255,255,255,0.1);
         }
 
         /* Zoom Slider (เล็กๆ) */
-        .zoom-slider-box { height: 100px; display: flex; align-items: center; justify-content: center; }
+        .zoom-slider-box { height: 120px; display: flex; align-items: center; justify-content: center; }
         input[type=range][orient=vertical] {
             writing-mode: bt-lr; -webkit-appearance: slider-vertical;
             width: 4px; height: 100%; margin: 0;
@@ -77,6 +92,14 @@
             background: rgba(255,255,255,0.2); color: white; font-size: 16px; cursor: pointer;
         }
         .stop-btn { background: #ff3b30; font-weight: bold; font-size: 10px; color: white; }
+
+        /* ข้อความเตือนให้แตะจอ */
+        .tap-hint {
+            position: absolute; bottom: 80px; width: 100%; text-align: center;
+            color: rgba(255,255,255,0.4); font-size: 10px; pointer-events: none;
+            animation: fadeOut 5s forwards;
+        }
+        @keyframes fadeOut { 0% {opacity: 1;} 80% {opacity: 1;} 100% {opacity: 0;} }
 
         /* Black Screen */
         #black-curtain { position: fixed; inset: 0; background: #000; z-index: 300; display: none; align-items: center; justify-content: center; flex-direction: column; color: #555; }
@@ -101,6 +124,7 @@
             <div class="c-card" onclick="start('CM108_Cam3')"><strong>CAM 03</strong><br><span style="color:#888;font-size:11px;">มุมกว้าง</span></div>
             <div class="c-card" onclick="start('CM108_Cam4')"><strong>CAM 04</strong><br><span style="color:#888;font-size:11px;">โดรน</span></div>
         </div>
+        <p style="margin-top:20px; color:#555; font-size:11px; text-align:center;">* แตะหน้าจอ 1 ครั้งหากปุ่มตั้งค่าหายไป</p>
     </div>
 
     <div id="live-layer">
@@ -117,6 +141,8 @@
                 <div style="font-size:10px; color:#ccc;">คำสั่งจากศูนย์:</div>
                 <span id="chat-text" style="font-size:20px; font-weight:bold;">--</span>
             </div>
+            
+            <div class="tap-hint">แตะหน้าจอเพื่อแสดง/ซ่อนปุ่มตั้งค่า ⚙️</div>
 
             <div class="right-mini-tools">
                 <button class="mini-btn stop-btn" onclick="location.reload()">หยุด</button>
@@ -150,8 +176,8 @@
             else if(currMode === 'safe') p = "&width=1280&height=720&bitrate=2500&framerate=30&buffer=2000";
             else p = "&quality=1&meshcast";
 
-            // &clean=0 : หัวใจสำคัญ! เปิดหน้าเดิม Ninja ทั้งหมด (ปุ่มตั้งค่าจะอยู่ล่างซ้าย/กลาง)
-            // &viewchat=1 : เปิดแชท
+            // &clean=0 : เพื่อให้ปุ่ม Ninja แสดง
+            // &viewchat=1 : บังคับแชท
             // &select : เลือกกล้องตอนเริ่ม
             let url = "https://vdo.ninja/?push=" + id + "&room=CM108_NewsRoom" + p + 
                       "&clean=0&transparent=0&viewchat=1&api=1&autostart&label=" + id + "&select";
