@@ -2,15 +2,20 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <title>CM108Live - Master Control</title>
+    <title>CM108Live - Master Control Room</title>
     <style>
-        body, html { margin: 0; padding: 0; height: 100%; background: #1a1a1a; }
+        body, html { margin: 0; padding: 0; height: 100%; background-color: #1a1a1a; font-family: sans-serif; }
         iframe { width: 100%; height: 100%; border: none; }
+        .warning { position: absolute; bottom: 10px; left: 10px; color: #666; font-size: 12px; pointer-events: none; }
     </style>
 </head>
 <body>
     <iframe allow="camera;microphone;fullscreen;display-capture;autoplay" 
             src="https://vdo.ninja/?director=CM108_NewsRoom">
     </iframe>
+    
+    <div class="warning">
+        System: CM108Live | Status: Ready
+    </div>
 </body>
 </html>
