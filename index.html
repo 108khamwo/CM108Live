@@ -2,126 +2,232 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CM108 Launcher</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>CM108 Hybrid Cam</title>
     <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;500;700&display=swap" rel="stylesheet">
     <style>
-        /* Base Reset */
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: #0a0a0a; font-family: 'Prompt', sans-serif; }
+        /* Setup */
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; }
+        body, html { margin: 0; padding: 0; width: 100%; height: 100dvh; background: #000; font-family: 'Prompt', sans-serif; overflow: hidden; }
 
-        /* --- LOBBY UI --- */
-        #lobby { 
-            max-width: 500px; margin: 0 auto; padding: 30px 20px; 
-            display: flex; flex-direction: column; align-items: center;
-        }
+        /* --- LOBBY --- */
+        #lobby { position: absolute; inset: 0; z-index: 100; background: #111; display: flex; flex-direction: column; padding: 20px; overflow-y: auto; text-align: center; }
+        h1 { color: #ff3b30; margin: 10px 0 20px; font-size: 26px; text-transform: uppercase; }
+        .label { color: #666; font-size: 13px; margin: 15px 0 10px; border-bottom: 1px solid #333; padding-bottom: 5px; text-align: left; }
         
-        h1 { color: #ff3b30; margin: 0 0 10px; font-size: 28px; text-transform: uppercase; letter-spacing: 1px; }
-        .subtitle { color: #666; font-size: 13px; margin-bottom: 30px; }
+        .mode-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+        .m-btn { background: #1a1a1a; border: 1px solid #333; border-radius: 12px; padding: 15px 5px; color: #aaa; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 5px; }
+        .m-btn.active { background: #ff3b30; border-color: #ff3b30; color: white; }
         
-        .section-label { 
-            align-self: flex-start; color: #888; font-size: 14px; margin: 20px 0 10px; 
-            border-bottom: 1px solid #333; width: 100%; padding-bottom: 5px; 
+        .cam-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .c-card { background: linear-gradient(145deg, #222, #1b1b1b); border: 1px solid #333; border-radius: 12px; padding: 20px 0; cursor: pointer; }
+        .c-card:active { border-color: #ff3b30; transform: scale(0.98); }
+        .c-card strong { display: block; font-size: 18px; color: white; margin-bottom: 5px; }
+
+        /* --- LIVE VIEW --- */
+        #live-view { display: none; position: fixed; inset: 0; background: #000; z-index: 50; }
+        /* ดันขอบล่างขึ้น 60px เพื่อหนีปุ่มตกขอบ และให้พื้นที่ปุ่ม Ninja */
+        #iframe-wrap { position: absolute; top: 0; left: 0; right: 0; bottom: 0; }
+        iframe { width: 100%; height: 100%; border: none; }
+
+        /* --- OVERLAY UI (ลอยเหนือ Iframe) --- */
+        .ui-layer { 
+            position: absolute; inset: 0; pointer-events: none; /* จิ้มทะลุได้ */
+            z-index: 60;
         }
 
-        /* 1. Mode Selector */
-        .mode-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; width: 100%; }
-        .mode-btn { 
-            background: #1a1a1a; border: 1px solid #333; border-radius: 12px; padding: 15px 10px; 
-            color: #aaa; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 8px; transition: 0.2s;
+        /* Top Bar */
+        .top-bar { 
+            position: absolute; top: 0; left: 0; right: 0; padding: 15px; 
+            display: flex; justify-content: space-between; align-items: flex-start;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.6), transparent);
         }
-        .mode-btn.active { background: #ff3b30; border-color: #ff3b30; color: white; box-shadow: 0 4px 15px rgba(255,59,48,0.3); }
-        .mode-icon { font-size: 24px; }
-        .mode-text { font-size: 12px; font-weight: bold; }
+        .rec-status { background: rgba(255,0,0,0.8); color: white; padding: 4px 10px; border-radius: 4px; font-size: 11px; font-weight: bold; display: flex; align-items: center; gap: 5px; }
+        .dot { width: 8px; height: 8px; background: white; border-radius: 50%; animation: blink 1s infinite; }
+        @keyframes blink { 50% { opacity: 0; } }
 
-        /* 2. Camera Selector */
-        .cam-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; width: 100%; }
-        .cam-btn { 
-            background: linear-gradient(145deg, #222, #1a1a1a); border: 1px solid #333; 
-            border-radius: 15px; padding: 25px 0; cursor: pointer; position: relative; transition: 0.2s;
+        /* Message Popup */
+        #chat-toast {
+            position: absolute; top: 20%; left: 50%; transform: translate(-50%, -50%);
+            width: 80%; max-width: 400px; background: rgba(0,0,0,0.9); border-left: 4px solid #ff3b30;
+            color: white; padding: 15px; border-radius: 8px; text-align: center;
+            display: none; animation: slideDown 0.3s;
         }
-        .cam-btn:active { transform: scale(0.98); border-color: #ff3b30; }
-        .cam-num { display: block; font-size: 22px; color: white; font-weight: bold; margin-bottom: 5px; }
-        .cam-desc { font-size: 12px; color: #666; }
+        @keyframes slideDown { from {transform: translate(-50%, -20px); opacity:0;} to {transform: translate(-50%, 0); opacity:1;} }
 
-        /* Note */
-        .note { margin-top: 40px; color: #444; font-size: 12px; text-align: center; line-height: 1.5; }
+        /* --- RIGHT SIDEBAR CONTROLS (แผงควบคุมขวา) --- */
+        .side-panel {
+            position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+            display: flex; flex-direction: column; gap: 15px; align-items: center;
+            pointer-events: auto; /* ให้กดได้ */
+            background: rgba(0,0,0,0.5); padding: 20px 8px; border-radius: 30px;
+            backdrop-filter: blur(5px); border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        /* Zoom Slider */
+        .zoom-box { height: 140px; display: flex; align-items: center; justify-content: center; position: relative; }
+        input[type=range][orient=vertical] {
+            writing-mode: bt-lr; -webkit-appearance: slider-vertical;
+            width: 6px; height: 100%; margin: 0;
+            accent-color: #ff3b30;
+        }
+        .zoom-label { position: absolute; top: -15px; font-size: 9px; color: #aaa; }
+
+        /* Round Buttons */
+        .btn-round {
+            width: 45px; height: 45px; border-radius: 50%; border: none;
+            background: rgba(255,255,255,0.15); color: white; font-size: 20px;
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+            transition: 0.2s;
+        }
+        .btn-round:active { background: white; color: black; transform: scale(0.9); }
+        .btn-stop { background: #ff3b30; font-size: 12px; font-weight: bold; }
+
+        /* Black Screen Overlay */
+        #ghost-mode {
+            position: fixed; inset: 0; background: #000; z-index: 999; display: none;
+            align-items: center; justify-content: center; flex-direction: column; color: #444;
+            pointer-events: auto;
+        }
+        .ghost-icon { font-size: 50px; margin-bottom: 20px; animation: pulse 3s infinite; }
+        @keyframes pulse { 0% {opacity:0.3} 50% {opacity:0.7} 100% {opacity:0.3} }
+
+        /* Hint Text */
+        .hint-btm {
+            position: absolute; bottom: 80px; left: 0; right: 0; text-align: center;
+            font-size: 11px; color: rgba(255,255,255,0.5); pointer-events: none;
+            text-shadow: 0 1px 2px #000;
+        }
     </style>
 </head>
 <body>
 
     <div id="lobby">
-        <h1>CM108 LIVE</h1>
-        <div class="subtitle">ระบบเชื่อมต่อสัญญาณภาคสนาม</div>
+        <h1>CM108 Hybrid</h1>
         
-        <div class="section-label">1. เลือกโหมดสัญญาณ (Mode)</div>
+        <div class="label">เลือกโหมด (Mode)</div>
         <div class="mode-grid">
-            <div class="mode-btn active" id="m-hq" onclick="setMode('hq')">
-                <span class="mode-icon">💎</span><span class="mode-text">ชัด (HQ)</span>
-            </div>
-            <div class="mode-btn" id="m-safe" onclick="setMode('safe')">
-                <span class="mode-icon">🛡️</span><span class="mode-text">เสถียร</span>
-            </div>
-            <div class="mode-btn" id="m-auto" onclick="setMode('auto')">
-                <span class="mode-icon">🤖</span><span class="mode-text">ออโต้</span>
-            </div>
+            <div class="m-btn active" id="m-hq" onclick="setMode('hq')"><span>💎</span><span>HQ</span></div>
+            <div class="m-btn" id="m-safe" onclick="setMode('safe')"><span>🛡️</span><span>Safe</span></div>
+            <div class="m-btn" id="m-auto" onclick="setMode('auto')"><span>🤖</span><span>Auto</span></div>
         </div>
 
-        <div class="section-label">2. กดเพื่อเริ่มถ่ายทอดสด (Camera)</div>
+        <div class="label">เลือกกล้อง (Camera)</div>
         <div class="cam-grid">
-            <div class="cam-btn" onclick="launch('CM108_Cam1')">
-                <span class="cam-num">CAM 01</span><span class="cam-desc">กล้องหลัก</span>
-            </div>
-            <div class="cam-btn" onclick="launch('CM108_Cam2')">
-                <span class="cam-num">CAM 02</span><span class="cam-desc">กล้องรอง</span>
-            </div>
-            <div class="cam-btn" onclick="launch('CM108_Cam3')">
-                <span class="cam-num">CAM 03</span><span class="cam-desc">มุมกว้าง</span>
-            </div>
-            <div class="cam-btn" onclick="launch('CM108_Cam4')">
-                <span class="cam-num">CAM 04</span><span class="cam-desc">โดรน/พิเศษ</span>
-            </div>
+            <div class="c-card" onclick="start('CM108_Cam1')"><strong>CAM 01</strong><br><span style="color:#888;font-size:11px;">กล้องหลัก</span></div>
+            <div class="c-card" onclick="start('CM108_Cam2')"><strong>CAM 02</strong><br><span style="color:#888;font-size:11px;">กล้องรอง</span></div>
+            <div class="c-card" onclick="start('CM108_Cam3')"><strong>CAM 03</strong><br><span style="color:#888;font-size:11px;">มุมกว้าง</span></div>
+            <div class="c-card" onclick="start('CM108_Cam4')"><strong>CAM 04</strong><br><span style="color:#888;font-size:11px;">โดรน</span></div>
+        </div>
+        <p style="font-size:11px; color:#555; margin-top:20px;">* ปุ่มตั้งค่า Ninja ⚙️ จะอยู่ด้านล่างซ้าย/กลางเสมอ</p>
+    </div>
+
+    <div id="live-view">
+        <div id="iframe-wrap">
+            <iframe id="vid" allow="camera;microphone;fullscreen;display-capture;autoplay"></iframe>
         </div>
 
-        <div class="note">
-            ระบบจะเปิดหน้า VDO.Ninja ต้นฉบับ<br>
-            คุณสามารถกด ⚙️ เพื่อเลือกเลนส์ และกด 💬 เพื่อดูแชทได้ตามปกติ
+        <div class="ui-layer">
+            <div class="top-bar">
+                <div class="rec-status"><div class="dot"></div> LIVE</div>
+                <div id="cam-status" style="font-size:12px; color:#ccc; font-weight:300;">1080p HQ</div>
+            </div>
+
+            <div id="chat-toast">
+                <div style="font-size:10px; color:#ccc;">คำสั่งจากศูนย์:</div>
+                <span id="toast-text" style="font-size:18px; font-weight:bold;">--</span>
+            </div>
+
+            <div class="side-panel">
+                <div class="zoom-box">
+                    <span class="zoom-label">ZOOM</span>
+                    <input type="range" orient="vertical" min="1" max="5" step="0.1" value="1" oninput="hardwareZoom(this.value)">
+                </div>
+                
+                <button class="btn-round" onclick="toggleGhost()">🌙</button>
+                
+                <button class="btn-round" onclick="send('cycleVideo')">🔄</button>
+                
+                <button class="btn-round btn-stop" onclick="location.reload()">STOP</button>
+            </div>
+            
+            <div class="hint-btm">ตั้งค่าอื่นๆ กด ⚙️ ด้านล่าง</div>
         </div>
     </div>
 
-    <script>
-        let currentMode = 'hq';
+    <div id="ghost-mode" onclick="toggleGhost()">
+        <div class="ghost-icon">🎥</div>
+        <h2>พักหน้าจอ</h2>
+        <p style="font-size:12px; opacity:0.7;">กำลังส่งสัญญาณ...</p>
+        <div style="margin-top:30px; font-size:11px; border:1px solid #333; padding:5px 15px; border-radius:20px;">แตะ 2 ครั้งเพื่อปลุก</div>
+    </div>
 
-        function setMode(mode) {
-            currentMode = mode;
-            // Update UI
-            document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
-            document.getElementById('m-' + mode).classList.add('active');
+    <script>
+        let currMode = 'hq';
+
+        function setMode(m) {
+            currMode = m;
+            document.querySelectorAll('.m-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById('m-' + m).classList.add('active');
         }
 
-        function launch(camId) {
-            // 1. ตั้งค่าความชัด
-            let params = "";
-            if (currentMode === 'hq') {
-                // HQ: 1080p60 @ 8Mbps
-                params = "&width=1920&height=1080&videobitrate=8000&framerate=60&quality=0";
-            } else if (currentMode === 'safe') {
-                // Safe: 720p30 @ 2.5Mbps + Buffer
-                params = "&width=1280&height=720&bitrate=2500&framerate=30&buffer=2000";
+        function start(id) {
+            let p = "";
+            if(currMode === 'hq') {
+                p = "&width=1920&height=1080&videobitrate=8000&framerate=60&quality=0";
+                document.getElementById('cam-status').innerText = "1080p HQ";
+            } else if(currMode === 'safe') {
+                p = "&width=1280&height=720&bitrate=2500&framerate=30&buffer=2000";
+                document.getElementById('cam-status').innerText = "720p Safe";
             } else {
-                // Auto: ให้ Ninja จัดการ
-                params = "&quality=1&meshcast";
+                p = "&quality=1&meshcast";
+                document.getElementById('cam-status').innerText = "Auto Mode";
             }
 
-            // 2. สร้าง URL ของ VDO.Ninja แท้ๆ
-            // &viewchat=1 : เปิดปุ่มแชท
-            // &select : บังคับเด้งถามเลือกเลนส์/ไมค์ก่อนเริ่ม (สำคัญ!)
-            // ตัด &clean, &transparent, &autostart ออกทั้งหมด เพื่อให้ได้ UI เดิม
-            let finalUrl = "https://vdo.ninja/?push=" + camId + "&room=CM108_NewsRoom" + params + 
-                           "&viewchat=1&select&label=" + camId;
+            // &clean=0 : เปิด UI Ninja เดิม (ปุ่มเฟือง)
+            // &viewchat=1 : บังคับแชท
+            // &select : เลือกกล้องตอนเริ่ม
+            let url = "https://vdo.ninja/?push=" + id + "&room=CM108_NewsRoom" + p + 
+                      "&clean=0&transparent=0&viewchat=1&api=1&autostart&label=" + id + "&select";
 
-            // 3. สั่ง Browser ให้ย้ายไปหน้านั้น (Redirect)
-            // วิธีนี้จะแก้ปัญหา UI ตกขอบ หรือ Iframe บังได้ 100%
-            window.location.href = finalUrl;
+            document.getElementById('vid').src = url;
+            document.getElementById('lobby').style.display = 'none';
+            document.getElementById('live-view').style.display = 'block';
+
+            // ดักจับข้อความ
+            window.addEventListener('message', function(e) {
+                if (e.data.action === 'chat' || e.data.msg === 'chat') {
+                    showToast(e.data.value || e.data.content);
+                }
+            });
+        }
+
+        // ฟังก์ชันซูมภาพจริง (Hardware Zoom) ส่งไปที่ Ninja API
+        function hardwareZoom(val) {
+            // คำสั่งนี้จะไปกระตุ้น Native Zoom ของกล้องมือถือ
+            document.getElementById('vid').contentWindow.postMessage({
+                "target": "video",
+                "type": "zoom", 
+                "value": val
+            }, '*');
+        }
+
+        function send(cmd) {
+            document.getElementById('vid').contentWindow.postMessage({"function": cmd}, '*');
+        }
+
+        function showToast(txt) {
+            if(!txt) return;
+            let t = document.getElementById('chat-toast');
+            document.getElementById('toast-text').innerText = txt;
+            t.style.display = 'block';
+            if(navigator.vibrate) navigator.vibrate(200);
+            setTimeout(() => { t.style.display = 'none'; }, 10000);
+        }
+
+        function toggleGhost() {
+            let g = document.getElementById('ghost-mode');
+            g.style.display = (g.style.display === 'flex') ? 'none' : 'flex';
         }
     </script>
 </body>
