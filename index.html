@@ -4,77 +4,108 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>CM108 Launcher</title>
-    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;500;700&display=swap" rel="stylesheet">
     <style>
-        /* ล้างค่าทุกอย่าง */
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: #000; font-family: 'Sarabun', sans-serif; overflow: hidden; }
+        /* Reset */
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: #000; font-family: 'Prompt', sans-serif; overflow: hidden; }
 
-        /* --- LOBBY (หน้าเลือกกล้อง) --- */
-        #lobby {
-            position: absolute; inset: 0; background: #111; z-index: 999;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
+        /* --- LOBBY (หน้าเลือกค่าเริ่มต้น) --- */
+        #lobby { 
+            position: absolute; inset: 0; z-index: 100; background: #0a0a0a; 
+            display: flex; flex-direction: column; padding: 20px; 
+            overflow-y: auto; text-align: center;
         }
-        h1 { color: #ff3b30; margin-bottom: 30px; }
-
-        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; width: 90%; max-width: 400px; }
-        .btn {
-            background: #222; color: white; border: 1px solid #444;
-            padding: 25px 0; font-size: 20px; font-weight: bold;
-            cursor: pointer; border-radius: 10px;
-        }
-        .btn:active { background: #ff3b30; border-color: #ff3b30; }
-
-        /* --- LIVE FRAME --- */
-        #live-frame { display: none; width: 100%; height: 100%; border: none; }
+        h1 { color: #ff3b30; margin: 10px 0 20px; font-size: 26px; }
         
-        /* ปุ่มรีเซ็ตเล็กๆ มุมซ้ายบน เผื่อจะกดเปลี่ยนเบอร์กล้อง */
-        .reset-btn {
-            position: fixed; top: 10px; left: 10px; z-index: 1000;
-            background: rgba(0,0,0,0.5); color: #fff; border: 1px solid #555;
-            padding: 5px 10px; border-radius: 5px; font-size: 12px; cursor: pointer;
-            display: none; /* ซ่อนไว้ก่อน จะโชว์เมื่อเข้าห้อง */
+        .label { color: #666; font-size: 13px; margin: 15px 0 10px; border-bottom: 1px solid #333; padding-bottom: 5px; text-align: left; }
+        
+        /* ปุ่มเลือกโหมด */
+        .mode-box { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+        .m-btn { 
+            background: #1a1a1a; border: 1px solid #333; border-radius: 12px; padding: 15px 5px; 
+            color: #aaa; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 5px;
         }
+        .m-btn.active { background: #ff3b30; border-color: #ff3b30; color: white; }
+        
+        /* ปุ่มเลือกกล้อง */
+        .cam-box { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .c-card { 
+            background: linear-gradient(145deg, #1e1e1e, #252525); border: 1px solid #333; 
+            border-radius: 12px; padding: 25px 0; cursor: pointer; position: relative; 
+        }
+        .c-card:active { border-color: #ff3b30; transform: scale(0.96); }
+        .c-card strong { display: block; font-size: 18px; color: white; margin-bottom: 5px; }
+
+        /* --- LIVE FRAME (เต็มจอ 100%) --- */
+        #live-layer { display: none; position: fixed; inset: 0; background: #000; z-index: 50; }
+        iframe { width: 100%; height: 100%; border: none; }
+
+        /* ปุ่ม Reset เล็กๆ เผื่ออยากกลับหน้าแรก */
+        .home-btn {
+            position: absolute; top: 10px; left: 10px; z-index: 9999;
+            background: rgba(0,0,0,0.5); color: #fff; border: 1px solid #555;
+            padding: 5px 10px; border-radius: 5px; font-size: 10px; cursor: pointer;
+            opacity: 0.5;
+        }
+        .home-btn:hover { opacity: 1; }
     </style>
 </head>
 <body>
 
-    <button id="reset" class="reset-btn" onclick="location.reload()">🏠 HOME</button>
-
     <div id="lobby">
-        <h1>CM108 LIVE UNIT</h1>
-        <div class="grid">
-            <button class="btn" onclick="go('CM108_Cam1')">กล้อง 1</button>
-            <button class="btn" onclick="go('CM108_Cam2')">กล้อง 2</button>
-            <button class="btn" onclick="go('CM108_Cam3')">กล้อง 3</button>
-            <button class="btn" onclick="go('CM108_Cam4')">กล้อง 4</button>
+        <h1>CM108 LIVE</h1>
+        
+        <div class="label">1. เลือกโหมด (Mode)</div>
+        <div class="mode-box">
+            <div class="m-btn active" id="m-hq" onclick="setMode('hq')"><span>💎</span><span>ชัด (HQ)</span></div>
+            <div class="m-btn" id="m-safe" onclick="setMode('safe')"><span>🛡️</span><span>เสถียร</span></div>
+            <div class="m-btn" id="m-auto" onclick="setMode('auto')"><span>🤖</span><span>ออโต้</span></div>
         </div>
-        <p style="color:#666; margin-top:20px; font-size:12px;">กดเลือกเพื่อเข้าสู่ระบบ VDO.Ninja ปกติ</p>
+
+        <div class="label">2. เลือกช่อง (Channel)</div>
+        <div class="cam-box">
+            <div class="c-card" onclick="start('CM108_Cam1')"><strong>CAM 01</strong><br><span style="color:#888;font-size:11px;">กล้องหลัก</span></div>
+            <div class="c-card" onclick="start('CM108_Cam2')"><strong>CAM 02</strong><br><span style="color:#888;font-size:11px;">กล้องรอง</span></div>
+            <div class="c-card" onclick="start('CM108_Cam3')"><strong>CAM 03</strong><br><span style="color:#888;font-size:11px;">มุมกว้าง</span></div>
+            <div class="c-card" onclick="start('CM108_Cam4')"><strong>CAM 04</strong><br><span style="color:#888;font-size:11px;">โดรน</span></div>
+        </div>
+        <p style="text-align:center; color:#555; font-size:11px; margin-top:20px;">
+            * กดเลือกแล้วจะเข้าสู่หน้าจอ VDO.Ninja ปกติ (มีปุ่มตั้งค่าครบ)
+        </p>
     </div>
 
-    <iframe id="live-frame" allow="camera;microphone;fullscreen;display-capture;autoplay"></iframe>
+    <div id="live-layer">
+        <button class="home-btn" onclick="location.reload()">🏠 HOME</button>
+        <iframe id="vid" allow="camera;microphone;fullscreen;display-capture;autoplay"></iframe>
+    </div>
 
     <script>
-        function go(id) {
-            // URL มาตรฐาน:
-            // &room = ห้องรวม
-            // &push = ชื่อกล้องเรา
-            // &clean=0 = ไม่ลบ UI (สำคัญมาก! เพื่อให้เห็นปุ่มตั้งค่า)
-            // &webcam = เปิดกล้องทันที
-            // &autostart = เริ่มทันที
-            // &viewchat=1 = เปิดดูแชทได้
-            
-            // คุณภาพ: 1080p, 60fps, 6Mbps (ปรับลดลงได้ถ้าเน็ตช้า)
-            let quality = "&width=1920&height=1080&framerate=60&videobitrate=6000";
+        let currMode = 'hq';
 
-            let url = "https://vdo.ninja/?push=" + id + "&room=CM108_NewsRoom" + quality + 
-                      "&clean=0&viewchat=1&autostart&webcam&label=" + id;
+        function setMode(m) {
+            currMode = m;
+            document.querySelectorAll('.m-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById('m-' + m).classList.add('active');
+        }
 
-            let frame = document.getElementById('live-frame');
-            frame.src = url;
-            frame.style.display = 'block';
-            
+        function start(id) {
+            let p = "";
+            // กำหนดค่าความชัดตามโหมดที่เลือก
+            if(currMode === 'hq') p = "&width=1920&height=1080&videobitrate=8000&framerate=60&quality=0";
+            else if(currMode === 'safe') p = "&width=1280&height=720&bitrate=2500&framerate=30&buffer=2000";
+            else p = "&quality=1&meshcast";
+
+            // URL ที่เป็น VDO.Ninja แท้ๆ
+            // &clean=0 : ไม่ลบปุ่มใดๆ (สำคัญมาก)
+            // &viewchat=1 : เปิดดูแชทได้ (ปุ่มแชทจะอยู่ขวาล่าง)
+            // &select : บังคับให้ Browser ถามเลนส์กล้องตอนเริ่ม
+            // &autostart : เริ่มทันทีหลังเลือกเลนส์เสร็จ
+            let url = "https://vdo.ninja/?push=" + id + "&room=CM108_NewsRoom" + p + 
+                      "&clean=0&viewchat=1&select&autostart&label=" + id;
+
+            document.getElementById('vid').src = url;
             document.getElementById('lobby').style.display = 'none';
-            document.getElementById('reset').style.display = 'block';
+            document.getElementById('live-layer').style.display = 'block';
         }
     </script>
 </body>
