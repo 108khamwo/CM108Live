@@ -41,6 +41,8 @@
     <script>
         function startSystem() {
             document.getElementById('start-screen').style.display = 'none';
+            // &autoadd=1 : ดึงภาพทุกกล้องขึ้นจออัตโนมัติ
+            // &clean=1 : ลบเมนูรกๆ
             let url = "https://vdo.ninja/?director=CM108_NewsRoom&quality=0&autoadd=1&clean=1&hidelinks=1&hideheader=1&noheader=1";
             document.getElementById('mcr').src = url;
         }
