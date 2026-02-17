@@ -6,7 +6,7 @@
     <style>
         body { margin: 0; padding: 0; background-color: #000; color: #fff; font-family: sans-serif; height: 100vh; display: flex; flex-direction: column; }
         
-        /* แถบด้านบน (Header) */
+        /* แถบด้านบน */
         header {
             height: 50px;
             background: #1a1a1a;
@@ -21,7 +21,7 @@
         .status { font-size: 12px; color: #888; }
         .status span { color: #0f0; margin-left: 5px; }
 
-        /* พื้นที่แสดงผล (Main View) */
+        /* พื้นที่แสดงผล */
         #main-view {
             flex-grow: 1;
             width: 100%;
@@ -36,12 +36,12 @@
 
     <header>
         <div class="logo">CM108 <span>LIVE CONTROL</span></div>
-        <div class="status">SYSTEM: <span>ONLINE</span> | RES: <span>1080p60</span></div>
+        <div class="status">SYSTEM: <span>ONLINE</span> | Room: <span>CM108_NewsRoom</span></div>
     </header>
 
     <div id="main-view">
         <iframe allow="camera;microphone;fullscreen;display-capture;autoplay" 
-                src="https://vdo.ninja/?director=CM108_NewsRoom&cleanoutput">
+                src="https://vdo.ninja/?director=CM108_NewsRoom">
         </iframe>
     </div>
 
