@@ -3,32 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CM108 Mobile Unit - Pro</title>
+    <title>CM108 Mobile Unit</title>
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;700&display=swap" rel="stylesheet">
     <style>
         :root { --red: #ff3b30; --green: #28a745; --bg: #000; }
         body, html { margin: 0; padding: 0; height: 100vh; background-color: var(--bg); color: white; font-family: 'Sarabun', sans-serif; overflow: hidden; }
-        
         #lobby { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; padding: 20px; box-sizing: border-box; }
-        h1 { margin: 0 0 10px 0; font-size: 26px; color: var(--red); text-transform: uppercase; letter-spacing: 1px; }
-
-        .mode-selector { background: #1a1a1a; border: 1px solid #333; padding: 15px; border-radius: 15px; margin-bottom: 25px; display: flex; align-items: center; cursor: pointer; width: 100%; max-width: 400px; }
-        .grid-container { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; width: 100%; max-width: 400px; }
-        .btn { background: #1a1a1a; border: 1px solid #444; color: white; padding: 20px; border-radius: 12px; cursor: pointer; text-align: left; }
-        .btn strong { display: block; font-size: 18px; margin-bottom: 4px; }
-
+        h1 { margin: 0 0 5px 0; font-size: 24px; color: var(--red); text-transform: uppercase; }
+        .mode-selector { background: #1a1a1a; border: 1px solid #333; padding: 12px 20px; border-radius: 15px; margin-bottom: 20px; display: flex; align-items: center; cursor: pointer; width: 100%; max-width: 400px; }
+        .grid-container { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; max-width: 400px; }
+        .btn { background: #1a1a1a; border: 1px solid #444; color: white; padding: 15px; border-radius: 12px; cursor: pointer; text-align: left; }
         #cam-container { display: none; width: 100%; height: 100%; position: relative; }
         iframe { width: 100%; height: 100%; border: none; }
-
-        .top-bar {
-            position: absolute; top: 0; left: 0; right: 0; height: 60px;
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 0 15px; z-index: 100;
-            background: linear-gradient(to bottom, rgba(0,0,0,0.8) 0%, transparent 100%);
-        }
+        .top-bar { position: absolute; top: 0; left: 0; right: 0; height: 60px; display: flex; justify-content: space-between; align-items: center; padding: 0 15px; z-index: 100; background: linear-gradient(to bottom, rgba(0,0,0,0.8) 0%, transparent 100%); }
         .stop-btn { background: var(--red); color: white; border: none; padding: 8px 18px; border-radius: 20px; font-weight: bold; cursor: pointer; }
-        .status-panel { background: rgba(0, 0, 0, 0.6); padding: 5px 12px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.2); backdrop-filter: blur(5px); font-size: 11px; text-align: right; }
-
+        .status-panel { background: rgba(0, 0, 0, 0.6); padding: 5px 12px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.2); backdrop-filter: blur(5px); font-size: 11px; }
         .switch { position: relative; width: 44px; height: 24px; }
         .switch input { opacity: 0; width: 0; height: 0; }
         .slider { position: absolute; cursor: pointer; inset: 0; background: #444; border-radius: 24px; transition: .4s; }
@@ -54,9 +43,7 @@
     <div id="cam-container">
         <div class="top-bar">
             <button class="stop-btn" onclick="location.reload()">⏹ หยุดไลฟ์</button>
-            <div class="status-panel">
-                📡 <span id="disp-res">1080p</span> | ⚙️ <span id="disp-mode" style="color:#0f0">HQ</span>
-            </div>
+            <div class="status-panel">📡 <span id="disp-res">1080p</span> | ⚙️ <span id="disp-mode" style="color:#0f0">HQ</span></div>
         </div>
         <iframe id="stream-frame" allow="camera;microphone;fullscreen;display-capture;autoplay"></iframe>
     </div>
@@ -72,9 +59,11 @@
             let isStable = document.getElementById("modeCheck").checked;
             document.getElementById('disp-res').innerText = isStable ? "720p" : "1080p";
             document.getElementById('disp-mode').innerText = isStable ? "Stable" : "HQ";
-            // เพิ่ม &chat=1 เพื่อรองรับการรับข้อความภาษาไทย
-            let params = isStable ? "&width=1280&height=720&framerate=30&buffer=2000&quality=1" : "&width=1920&height=1080&videobitrate=8000&quality=0&denoise=0";
-            let streamUrl = "https://vdo.ninja/?push=" + camId + "&room=CM108_NewsRoom" + params + "&chat=1&clean&hidelinks&pwa&autostart&label=" + camId + "&select"; 
+            
+            // เพิ่ม &chat=1 และ &viewchat=1 เพื่อให้ข้อความเด้งขึ้นบนจอ
+            let params = isStable ? "&width=1280&height=720&framerate=30&buffer=2000" : "&width=1920&height=1080&videobitrate=8000&denoise=0";
+            let streamUrl = "https://vdo.ninja/?push=" + camId + "&room=CM108_NewsRoom" + params + "&chat=1&viewchat=1&clean&hidelinks&pwa&autostart&label=" + camId + "&select"; 
+            
             document.getElementById('stream-frame').src = streamUrl;
             document.getElementById('lobby').style.display = 'none';
             document.getElementById('cam-container').style.display = 'block';
