@@ -2,13 +2,13 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <title>CM108 MCR SWITCHER</title>
+    <title>CM108 Master Control</title>
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;700&display=swap" rel="stylesheet">
     <style>
         body, html { margin: 0; padding: 0; height: 100vh; background: #000; color: white; font-family: 'Sarabun', sans-serif; overflow: hidden; }
         .container { display: grid; grid-template-rows: 50px 1fr 70px; height: 100vh; }
         header { background: #111; border-bottom: 1px solid #333; display: flex; align-items: center; padding: 0 20px; font-weight: bold; color: #ff3b30; }
-        main { background: #000; }
+        main { background: #000; overflow: hidden; }
         iframe { width: 100%; height: 100%; border: none; }
         footer { background: #1a1a1a; border-top: 1px solid #444; display: flex; align-items: center; gap: 15px; padding: 0 20px; }
         .sel { background: #333; color: white; border: 1px solid #555; padding: 10px; border-radius: 8px; font-family: 'Sarabun'; }
@@ -16,15 +16,12 @@
     </style>
 </head>
 <body>
-
 <div class="container">
     <header>CM108 MASTER CONTROL ROOM</header>
-
     <main>
         <iframe id="mcr-frame" allow="camera;microphone;fullscreen;display-capture;autoplay" 
-                src="https://vdo.ninja/?director=CM108_NewsRoom&quality=0&cleanoutput=1&hidelinks=1&hideheader=1&noheader=1"></iframe>
+                src="https://vdo.ninja/?director=CM108_NewsRoom&quality=0&cleanoutput=1"></iframe>
     </main>
-
     <footer>
         <select id="target" class="sel">
             <option value="all">ส่งหาทุกคน</option>
@@ -36,23 +33,20 @@
         <input type="text" id="msg" class="in" placeholder="พิมพ์ข้อความแล้วกด Enter เพื่อส่งหาทีมงาน..." onkeydown="if(event.key === 'Enter') send()">
     </footer>
 </div>
-
 <script>
     function send() {
         const text = document.getElementById('msg').value.trim();
         const target = document.getElementById('target').value;
         const frame = document.getElementById('mcr-frame').contentWindow;
-
         if (!text) return;
 
-        // รูปแบบการส่งข้อมูลที่ VDO.Ninja ยอมรับเพื่อให้แสดงผลบน Overlay
+        // บังคับส่งผ่าน postMessage เพื่อให้ VDO.Ninja แสดงผลเป็น Overlay แชท
         const payload = { "msg": "chat", "content": text };
         if (target !== 'all') payload.to = target;
-
         frame.postMessage(payload, '*');
+        
         document.getElementById('msg').value = '';
     }
 </script>
-
 </body>
 </html>
