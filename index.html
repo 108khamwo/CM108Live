@@ -3,131 +3,66 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CM108 Mobile Unit (Stable)</title>
+    <title>CM108 Mobile Unit (Sharp)</title>
     <style>
-        body { margin: 0; padding: 0; background-color: #0d0d0d; color: white; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: hidden; }
+        body { margin: 0; padding: 0; background-color: #000; color: white; font-family: sans-serif; height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: hidden; }
         
-        /* หน้า Lobby */
-        #lobby { text-align: center; width: 100%; max-width: 480px; padding: 20px; box-sizing: border-box; }
-        h1 { margin-bottom: 5px; font-size: 28px; color: #ff3b30; text-transform: uppercase; letter-spacing: 2px; }
-        .subtitle { color: #888; margin-bottom: 25px; font-size: 14px; }
-        
-        .section-title { text-align: left; color: #666; font-size: 12px; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px; }
-        
-        .btn-group { display: grid; gap: 12px; margin-bottom: 20px; }
+        #lobby { text-align: center; width: 100%; max-width: 480px; padding: 20px; }
+        h1 { margin-bottom: 20px; font-size: 24px; color: #ff3b30; }
         
         .btn {
-            background: linear-gradient(145deg, #1e1e1e, #2a2a2a);
-            border: 1px solid #444;
-            color: white;
-            padding: 18px;
-            font-size: 18px;
-            border-radius: 12px;
-            cursor: pointer;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-            transition: 0.2s;
-            text-align: left;
+            background: #222; border: 1px solid #444; color: white;
+            padding: 20px; margin-bottom: 15px; font-size: 18px;
+            border-radius: 10px; cursor: pointer; width: 100%; text-align: left;
         }
-        .btn:active { transform: scale(0.98); border-color: #ff3b30; }
-        .btn-content { display: flex; flex-direction: column; }
-        .btn strong { font-size: 18px; color: #fff; display: block; }
-        .btn span { font-size: 12px; color: #888; margin-top: 4px; }
-        .btn .icon { font-size: 24px; }
-
-        /* ปุ่มโหมดเสถียร */
-        .btn.stable { border-color: #28a745; background: linear-gradient(145deg, #152e1b, #1e3a24); }
-        .btn.stable strong { color: #28a745; }
-
-        /* หน้ากล้อง */
-        #cam-container { display: none; width: 100%; height: 100%; position: absolute; top: 0; left: 0; background: black; }
-        iframe { width: 100%; height: 100%; border: none; }
+        .btn strong { display: block; font-size: 20px; color: #fff; }
+        .btn span { font-size: 14px; color: #ff3b30; }
         
-        /* ปุ่มควบคุมหน้างาน */
-        .controls { position: absolute; top: 20px; left: 20px; z-index: 999; display: flex; gap: 10px; }
-        .ctrl-btn { background: rgba(0, 0, 0, 0.6); color: white; border: 1px solid rgba(255,255,255,0.3); padding: 8px 15px; border-radius: 50px; font-size: 14px; cursor: pointer; backdrop-filter: blur(5px); }
-        .ctrl-btn.red { background: rgba(220, 53, 69, 0.8); border: none; }
+        #cam-container { display: none; width: 100%; height: 100%; position: absolute; top: 0; left: 0; }
+        iframe { width: 100%; height: 100%; border: none; }
+        #back-btn { position: absolute; top: 20px; left: 20px; z-index: 999; background: red; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; }
     </style>
 </head>
 <body>
 
     <div id="lobby">
-        <h1>🔴 CM108 Live</h1>
-        <div class="subtitle">เลือกโหมดการส่งสัญญาณ</div>
+        <h1>🔴 CM108 Live Unit</h1>
         
-        <div class="section-title">🚀 พื้นที่สัญญาณ 5G / WiFi แรง</div>
-        <div class="btn-group">
-            <div class="btn" onclick="startStream('CM108_Cam1', 'hq')">
-                <div class="btn-content">
-                    <strong>กล้องหลัก 1 (HQ)</strong>
-                    <span>1080p | 60fps | 6 Mbps</span>
-                </div>
-                <div class="icon">🎥</div>
-            </div>
-            
-            <div class="btn" onclick="startStream('CM108_Cam2', 'hq')">
-                <div class="btn-content">
-                    <strong>กล้องรอง 2 (HQ)</strong>
-                    <span>1080p | 60fps | 6 Mbps</span>
-                </div>
-                <div class="icon">🎥</div>
-            </div>
-        </div>
+        <button class="btn" onclick="startStream('CM108_Cam1')">
+            <strong>🎥 กล้องหลัก 1 (Super Sharp)</strong>
+            <span>1080p | 60fps | No Denoise</span>
+        </button>
 
-        <div class="section-title">🛡️ พื้นที่สัญญาณอ่อน / คนเยอะ</div>
-        <div class="btn-group">
-            <div class="btn stable" onclick="startStream('CM108_Cam1', 'stable')">
-                <div class="btn-content">
-                    <strong>กล้อง 1 (โหมดเสถียร)</strong>
-                    <span>720p | ลื่นไหลพิเศษ | กันภาพค้าง</span>
-                </div>
-                <div class="icon">🛡️</div>
-            </div>
-
-            <div class="btn stable" onclick="startStream('CM108_Cam2', 'stable')">
-                <div class="btn-content">
-                    <strong>กล้อง 2 (โหมดเสถียร)</strong>
-                    <span>720p | ลื่นไหลพิเศษ | กันภาพค้าง</span>
-                </div>
-                <div class="icon">🛡️</div>
-            </div>
-        </div>
+        <button class="btn" onclick="startStream('CM108_Cam1', true)">
+            <strong>🎥 กล้องหลัก 1 (Max Detail)</strong>
+            <span>1080p | 30fps | ชัดที่สุด</span>
+        </button>
     </div>
 
     <div id="cam-container">
-        <div class="controls">
-            <button class="ctrl-btn red" onclick="location.reload()">⏹ หยุด/ออก</button>
-            <button class="ctrl-btn" onclick="document.getElementById('stream-frame').src = document.getElementById('stream-frame').src">🔄 รีโหลดสัญญาณ</button>
-        </div>
+        <button id="back-btn" onclick="location.reload()">⏹ STOP</button>
         <iframe id="stream-frame" allow="camera;microphone;fullscreen;display-capture;autoplay"></iframe>
     </div>
 
     <script>
-        function startStream(camId, mode) {
-            let params = "";
-
-            if (mode === 'hq') {
-                // 🚀 โหมด HQ: เน้นชัด (แต่ถ้าเน็ตไม่ถึง 6Mbps อาจกระตุก)
-                // buffer=300 : ดีเลย์น้อย (0.3วิ)
-                params = "&width=1920&height=1080&framerate=60&videobitrate=6000&quality=0&buffer=300";
-            } else {
-                // 🛡️ โหมด Stable: เน้นลื่น (ภาพจะไม่คมกริบ แต่ไม่ค้างแน่นอน)
-                // quality=1 : สั่งให้ลดความชัดเมื่อเน็ตแย่ (ดีกว่าภาพค้าง)
-                // scale=50 : ถ้าเน็ตแย่มาก ให้ลดขนาดภาพลงเหลือ 50%
-                // buffer=2000 : ถังพัก 2 วินาที (ช่วยกันกระตุกได้ดีที่สุด)
-                // maxbitrate=2500 : ล็อกเพดานบิตเรตไม่ให้เกินตัว
-                // mesh : ใช้โหมด Mesh ช่วยการเชื่อมต่อ
-                params = "&width=1280&height=720&framerate=30&maxbitrate=2500&quality=1&scale=50&buffer=2000&mesh&degrade";
+        function startStream(camId, force30fps = false) {
+            
+            // สูตรลับความคมชัด:
+            // denoise=0 : ปิดการเกลี่ยภาพ (ภาพจะคมขึ้นทันที แต่อาจมี noise บ้างในที่มืด)
+            // scale=100 : ห้ามย่อภาพ
+            // videobitrate=10000 : อัดบิตเรต 10Mbps
+            let commonParams = "&width=1920&height=1080&videobitrate=10000&quality=0&denoise=0&scale=100";
+            
+            let fpsParams = "&framerate=60"; // ค่าปกติ 60fps
+            
+            if (force30fps) {
+                // ถ้า 60fps แล้วภาพแตก ให้ลองใช้ 30fps ซึ่งภาพจะคมกว่ามากในบิตเรตเท่ากัน
+                fpsParams = "&framerate=30"; 
             }
 
-            // สร้าง URL
-            // pwa : ซ่อนเมนู
-            // facing=environment : บังคับกล้องหลัง
             var streamUrl = "https://vdo.ninja/?push=" + camId + 
                             "&room=CM108_NewsRoom" + 
-                            params + 
+                            commonParams + fpsParams +
                             "&pwa&autostart&label=" + camId + 
                             "&facing=environment";
 
