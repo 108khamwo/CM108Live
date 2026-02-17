@@ -8,19 +8,38 @@
     <style>
         body, html { margin: 0; padding: 0; height: 100vh; background: #000; color: white; font-family: 'Sarabun', sans-serif; overflow: hidden; }
         #lobby { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; padding: 20px; }
-        h1 { font-size: 24px; color: #ff3b30; margin-bottom: 30px; }
+        h1 { font-size: 26px; color: #ff3b30; margin-bottom: 20px; }
+        
+        /* สวิตช์โหมดป้องกันตาย */
+        .stable-box { background: #1a1a1a; border: 1px solid #333; padding: 15px; border-radius: 15px; margin-bottom: 25px; display: flex; align-items: center; cursor: pointer; width: 100%; max-width: 350px; }
+        .switch { position: relative; width: 50px; height: 26px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; inset: 0; background: #444; border-radius: 34px; transition: .4s; }
+        .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 4px; bottom: 4px; background: #fff; border-radius: 50%; transition: .4s; }
+        input:checked + .slider { background: #28a745; }
+        input:checked + .slider:before { transform: translateX(24px); }
+        .mode-text { margin-left: 15px; text-align: left; }
+        .mode-text strong { display: block; font-size: 16px; }
+        .mode-text span { font-size: 11px; color: #888; }
+
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; width: 100%; max-width: 400px; }
         .btn { background: #1a1a1a; border: 1px solid #444; color: white; padding: 20px; border-radius: 15px; cursor: pointer; font-size: 18px; font-weight: bold; }
         #cam-area { display: none; width: 100%; height: 100%; position: relative; }
         iframe { width: 100%; height: 100%; border: none; }
         .ui-overlay { position: absolute; bottom: 20px; left: 0; right: 0; display: flex; justify-content: center; z-index: 1000; }
-        .stop-live { background: #ff3b30; color: white; border: none; padding: 12px 30px; border-radius: 50px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
+        .stop-live { background: #ff3b30; color: white; border: none; padding: 12px 30px; border-radius: 50px; font-weight: bold; cursor: pointer; }
     </style>
 </head>
 <body>
-
     <div id="lobby">
         <h1>🔴 CM108 LIVE</h1>
+        <div class="stable-box" onclick="toggleStable()">
+            <label class="switch"><input type="checkbox" id="stableToggle"><span class="slider"></span></label>
+            <div class="mode-text">
+                <strong id="modeTitle">โหมดปกติ (HQ)</strong>
+                <span id="modeDesc">1080p | คมชัดสูงสุด</span>
+            </div>
+        </div>
         <div class="grid">
             <button class="btn" onclick="start('CM108_Cam1')">กล้อง 1</button>
             <button class="btn" onclick="start('CM108_Cam2')">กล้อง 2</button>
@@ -28,21 +47,103 @@
             <button class="btn" onclick="start('CM108_Cam4')">กล้อง 4</button>
         </div>
     </div>
-
     <div id="cam-area">
         <iframe id="vid-frame" allow="camera;microphone;fullscreen;display-capture;autoplay"></iframe>
-        <div class="ui-overlay">
-            <button class="stop-live" onclick="location.reload()">⏹ หยุดส่งสัญญาณ</button>
+        <div class="ui-overlay"><button class="stop-live" onclick="location.reload()">⏹ หยุดส่งสัญญาณ</button></div>
+    </div>
+    <script>
+        function toggleStable() {
+            let chk = document.getElementById("stableToggle");
+            let title = document.getElementById("modeTitle");
+            let desc = document.getElementById("modeDesc");
+            chk.checked = !chk.checked;
+            title.innerText = chk.checked ? "โหมดป้องกันตาย (Stable)" : "โหมดปกติ (HQ)";
+            title.style.color = chk.checked ? "#28a745" : "white";
+            desc.innerText = chk.checked ? "720p | เน้นลื่นไหล กันเน็ตหลุด" : "1080p | คมชัดสูงสุด";
+        }
+        function start(id) {
+            let isStable = document.getElementById("stableToggle").checked;
+            // &viewchat=1 : บังคับให้ข้อความเด้งขึ้นบนวิดีโอทันที
+            let config = isStable 
+                ? "&width=1280&height=720&framerate=30&buffer=2000&quality=1&chat=1&viewchat=1" 
+                : "&width=1920&height=1080&videobitrate=8000&quality=0&chat=1&viewchat=1";
+            let url = "https://vdo.ninja/?push=" + id + "&room=CM108_NewsRoom" + config + "&clean=1&hidelinks=1&pwa=1&autostart&label=" + id + "&select";
+            document.getElementById('vid-frame').src = url;
+            document.getElementById('lobby').style.display = 'none';
+            document.getElementById('cam-area').style.display = 'block';
+        }
+    </script>
+</body>
+</html><!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>CM108 Mobile Unit</title>
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body, html { margin: 0; padding: 0; height: 100vh; background: #000; color: white; font-family: 'Sarabun', sans-serif; overflow: hidden; }
+        #lobby { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; padding: 20px; }
+        h1 { font-size: 26px; color: #ff3b30; margin-bottom: 20px; }
+        
+        /* สวิตช์โหมดป้องกันตาย */
+        .stable-box { background: #1a1a1a; border: 1px solid #333; padding: 15px; border-radius: 15px; margin-bottom: 25px; display: flex; align-items: center; cursor: pointer; width: 100%; max-width: 350px; }
+        .switch { position: relative; width: 50px; height: 26px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; inset: 0; background: #444; border-radius: 34px; transition: .4s; }
+        .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 4px; bottom: 4px; background: #fff; border-radius: 50%; transition: .4s; }
+        input:checked + .slider { background: #28a745; }
+        input:checked + .slider:before { transform: translateX(24px); }
+        .mode-text { margin-left: 15px; text-align: left; }
+        .mode-text strong { display: block; font-size: 16px; }
+        .mode-text span { font-size: 11px; color: #888; }
+
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; width: 100%; max-width: 400px; }
+        .btn { background: #1a1a1a; border: 1px solid #444; color: white; padding: 20px; border-radius: 15px; cursor: pointer; font-size: 18px; font-weight: bold; }
+        #cam-area { display: none; width: 100%; height: 100%; position: relative; }
+        iframe { width: 100%; height: 100%; border: none; }
+        .ui-overlay { position: absolute; bottom: 20px; left: 0; right: 0; display: flex; justify-content: center; z-index: 1000; }
+        .stop-live { background: #ff3b30; color: white; border: none; padding: 12px 30px; border-radius: 50px; font-weight: bold; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <div id="lobby">
+        <h1>🔴 CM108 LIVE</h1>
+        <div class="stable-box" onclick="toggleStable()">
+            <label class="switch"><input type="checkbox" id="stableToggle"><span class="slider"></span></label>
+            <div class="mode-text">
+                <strong id="modeTitle">โหมดปกติ (HQ)</strong>
+                <span id="modeDesc">1080p | คมชัดสูงสุด</span>
+            </div>
+        </div>
+        <div class="grid">
+            <button class="btn" onclick="start('CM108_Cam1')">กล้อง 1</button>
+            <button class="btn" onclick="start('CM108_Cam2')">กล้อง 2</button>
+            <button class="btn" onclick="start('CM108_Cam3')">กล้อง 3</button>
+            <button class="btn" onclick="start('CM108_Cam4')">กล้อง 4</button>
         </div>
     </div>
-
+    <div id="cam-area">
+        <iframe id="vid-frame" allow="camera;microphone;fullscreen;display-capture;autoplay"></iframe>
+        <div class="ui-overlay"><button class="stop-live" onclick="location.reload()">⏹ หยุดส่งสัญญาณ</button></div>
+    </div>
     <script>
+        function toggleStable() {
+            let chk = document.getElementById("stableToggle");
+            let title = document.getElementById("modeTitle");
+            let desc = document.getElementById("modeDesc");
+            chk.checked = !chk.checked;
+            title.innerText = chk.checked ? "โหมดป้องกันตาย (Stable)" : "โหมดปกติ (HQ)";
+            title.style.color = chk.checked ? "#28a745" : "white";
+            desc.innerText = chk.checked ? "720p | เน้นลื่นไหล กันเน็ตหลุด" : "1080p | คมชัดสูงสุด";
+        }
         function start(id) {
-            // &chat=1 &viewchat=1 : บังคับให้ข้อความแชทเด้งขึ้นหน้าจอ
-            // &clean=1 : ลบเมนูรกๆ ของระบบออก
-            let config = "&width=1920&height=1080&videobitrate=8000&quality=0&chat=1&viewchat=1&clean=1&hidelinks=1&pwa=1";
-            let url = "https://vdo.ninja/?push=" + id + "&room=CM108_NewsRoom" + config + "&autostart&label=" + id + "&select";
-            
+            let isStable = document.getElementById("stableToggle").checked;
+            // &viewchat=1 : บังคับให้ข้อความเด้งขึ้นบนวิดีโอทันที
+            let config = isStable 
+                ? "&width=1280&height=720&framerate=30&buffer=2000&quality=1&chat=1&viewchat=1" 
+                : "&width=1920&height=1080&videobitrate=8000&quality=0&chat=1&viewchat=1";
+            let url = "https://vdo.ninja/?push=" + id + "&room=CM108_NewsRoom" + config + "&clean=1&hidelinks=1&pwa=1&autostart&label=" + id + "&select";
             document.getElementById('vid-frame').src = url;
             document.getElementById('lobby').style.display = 'none';
             document.getElementById('cam-area').style.display = 'block';
