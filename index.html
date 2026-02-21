@@ -13,12 +13,11 @@
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body, html { margin: 0; padding: 0; width: 100%; height: 100dvh; background: #000; font-family: 'Prompt', sans-serif; overflow: hidden; }
 
-        /* --- LOBBY (หน้าเลือกโหมด) --- */
+        /* --- LOBBY --- */
         #lobby { 
             position: absolute; inset: 0; z-index: 100; background: #111; 
             display: flex; flex-direction: column; padding: 20px; text-align: center; overflow-y: auto; 
         }
-        /* เปลี่ยนเป็นสีฟ้า CM108 */
         h1 { color: #007aff; margin-bottom: 10px; font-size: 26px; }
         .label { color: #888; font-size: 14px; margin: 15px 0 10px; border-bottom: 1px solid #333; padding-bottom: 5px; text-align: left; }
         
@@ -27,7 +26,6 @@
             background: #1a1a1a; border: 1px solid #333; border-radius: 12px; padding: 15px 5px; 
             color: #888; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 5px; 
         }
-        /* เปลี่ยนสีเมื่อถูกเลือกเป็นสีฟ้า */
         .m-btn.active { background: #007aff; color: white; border-color: #007aff; }
         .m-btn span { font-weight: bold; font-size: 14px; }
         .m-btn small { font-size: 10px; opacity: 0.8; }
@@ -44,22 +42,20 @@
         #live-view { display: none; position: fixed; inset: 0; background: #000; z-index: 50; }
         iframe { width: 100%; height: 100%; border: none; }
 
-        /* --- STATUS BAR (แถบสถานะซ้ายบน) --- */
+        /* --- STATUS BAR --- */
         .status-bar {
             position: fixed !important; top: 15px; left: 15px; z-index: 999999 !important;
             background: rgba(0,0,0,0.6); padding: 8px 12px; border-radius: 20px;
             color: white; font-size: 12px; display: flex; gap: 15px; align-items: center;
             backdrop-filter: blur(5px); border: 1px solid rgba(255,255,255,0.1);
-            pointer-events: auto;
-            cursor: pointer;
-            font-weight: 500;
+            pointer-events: auto; cursor: pointer; font-weight: 500;
         }
         .status-item { display: flex; align-items: center; gap: 5px; }
         .text-good { color: #34c759; }
         .text-warn { color: #ffcc00; }
-        .text-bad { color: #ff3b30; } /* สีแดงคงไว้สำหรับแจ้งเตือนเน็ตไม่ดี */
+        .text-bad { color: #ff3b30; }
 
-        /* --- CONTROL (แถบขวา) --- */
+        /* --- CONTROL --- */
         .side-ctrl {
             position: fixed !important; right: 15px; top: 50%; transform: translateY(-50%);
             display: flex; flex-direction: column; gap: 15px; align-items: center;
@@ -74,21 +70,17 @@
             cursor: pointer; display: flex; align-items: center; justify-content: center; 
         }
         .btn-act:active { background: white; color: black; }
-        /* ปุ่ม Home สีฟ้า */
         .btn-home { background: #007aff; font-size: 11px; font-weight: bold; }
 
-        /* --- MESSAGE POPUP (แถบข้อความเด้ง) --- */
+        /* --- MESSAGE POPUP --- */
         #msg-toast {
             position: fixed !important; top: 20%; left: 50%; transform: translate(-50%, -50%);
-            width: 85%; max-width: 400px; background: rgba(0,0,0,0.9); 
-            border-left: 5px solid #007aff; /* ขอบซ้ายสีฟ้า */
+            width: 85%; max-width: 400px; background: rgba(0,0,0,0.95); 
+            border-left: 5px solid #007aff; 
             color: white; padding: 15px 20px; border-radius: 8px; text-align: center;
-            display: none; z-index: 2147483647 !important; 
-            pointer-events: auto; /* เปลี่ยนเป็น auto เพื่อให้กดปุ่มปิดได้ */
+            display: none; z-index: 2147483647 !important; pointer-events: auto;
             box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-            animation: slideDown 0.3s;
         }
-        /* ปุ่มปิดข้อความ */
         .toast-close {
             position: absolute; top: 5px; right: 10px; color: #888; font-size: 16px; 
             background: none; border: none; cursor: pointer; padding: 5px;
@@ -109,15 +101,9 @@
         
         <div class="label">1. เลือกโหมดคุณภาพ</div>
         <div class="mode-grid">
-            <div class="m-btn active" id="m-hq" onclick="setMode('hq')">
-                <span>ชัดพิเศษ</span><small>1080p 60fps</small>
-            </div>
-            <div class="m-btn" id="m-safe" onclick="setMode('safe')">
-                <span>เน้นเสถียร</span><small>720p 30fps</small>
-            </div>
-            <div class="m-btn" id="m-auto" onclick="setMode('auto')">
-                <span>ออโต้</span><small>ปรับตามเน็ต</small>
-            </div>
+            <div class="m-btn active" id="m-hq" onclick="setMode('hq')"><span>ชัดพิเศษ</span><small>1080p 60fps</small></div>
+            <div class="m-btn" id="m-safe" onclick="setMode('safe')"><span>เน้นเสถียร</span><small>720p 30fps</small></div>
+            <div class="m-btn" id="m-auto" onclick="setMode('auto')"><span>ออโต้</span><small>ปรับตามเน็ต</small></div>
         </div>
         
         <div class="label">2. เลือกช่องกล้อง</div>
@@ -136,8 +122,8 @@
     <div id="live-view">
         <iframe id="vid" allow="camera;microphone;fullscreen;display-capture;autoplay"></iframe>
 
-        <!-- แตะที่แถบสถานะเพื่อทดสอบระบบแชท -->
-        <div class="status-bar" id="status-bar" style="display: none;" onclick="showToast('ทดสอบข้อความ 12345')">
+        <!-- กดตรงนี้เพื่อทดสอบ (ใช้ทดสอบได้เสมอ) -->
+        <div class="status-bar" id="status-bar" style="display: none;" onclick="showToast('ทดสอบข้อความจากระบบ!')">
             <div class="status-item"><span id="net-icon">🟢</span> <span id="net-text">ตรวจสอบสัญญาณ...</span></div>
         </div>
 
@@ -187,51 +173,63 @@
             initMonitor();
             requestWakeLock();
 
-            // === ระบบดักจับและกรองข้อความ ===
+            // === ระบบดักจับและกรองข้อความ (รุ่นแกะกล่อง 2 ชั้น) ===
             window.addEventListener('message', function(e) {
-                let data = e.data;
-                
-                if (typeof data === 'string') {
-                    try { data = JSON.parse(data); } catch (err) { return; }
-                }
-                if (!data || typeof data !== 'object') return;
-                
-                // กรองข้อมูลสถิติที่ส่งมารัวๆ ทิ้งไป
-                if (data.action === 'stats' || data.type === 'stats' || data.action === 'mic-volume' || data.action === 'video-bitrate') return;
-
-                let payload = (data.data && typeof data.data === 'object') ? data.data : data;
-                let txt = "";
-
-                // ตรวจจับข้อความจาก Ninja (ในรูปคือ data.gotchat.msg)
-                if (payload.gotchat && payload.gotchat.msg) {
-                    txt = payload.gotchat.msg;
-                } else {
-                    let actionStr = String(payload.action || payload.type || "").toLowerCase();
-                    if (actionStr.includes('chat') || actionStr.includes('message') || actionStr.includes('msg')) {
-                        txt = payload.msg || payload.message || payload.value || payload.text || payload.chat;
-                    } else if (typeof payload.chat === 'string') {
-                        txt = payload.chat;
-                    }
-                }
-
-                if (txt && typeof txt === 'string') {
-                    // 1. ตัดโค้ด HTML ของ Ninja ที่ชอบต่อท้ายมา (เช่น <b><i><span class='chat_director...)
-                    let cleanTxt = txt.split('<b><i><span')[0];
-                    cleanTxt = cleanTxt.split('<br><span')[0];
+                try {
+                    let data = e.data;
                     
-                    // 2. ใช้ Element เสมือน เพื่อละลายโค้ด HTML ที่เหลือทิ้งไป เอาแต่ Text เพียวๆ
-                    let tmp = document.createElement("div");
-                    tmp.innerHTML = cleanTxt;
-                    cleanTxt = (tmp.textContent || tmp.innerText || "").trim();
-
-                    // ถ้ากรองเสร็จแล้วยังมีข้อความเหลืออยู่ ให้โชว์ขึ้นจอเลย
-                    if (cleanTxt !== "") {
-                        showToast(cleanTxt);
+                    // ขั้นที่ 1: แกะกล่องชั้นนอกสุด
+                    if (typeof data === 'string') {
+                        try { data = JSON.parse(data); } catch(err) {}
                     }
+                    if (!data || typeof data !== 'object') return;
+
+                    // ขั้นที่ 2: แกะกล่องชั้นใน (VDO.Ninja ชอบซ่อนข้อความไว้ใน data.data ที่เป็น String อีกที)
+                    if (data.data && typeof data.data === 'string') {
+                        try { data.data = JSON.parse(data.data); } catch(err) {}
+                    }
+
+                    // สร้างตัวแปร payload เพื่อใช้อ่านค่าง่ายๆ
+                    let payload = (data.data && typeof data.data === 'object') ? data.data : data;
+
+                    // ข้ามข้อมูลสถิติที่วิ่งรัวๆ เพื่อประหยัดแบตเตอรี่
+                    let actionStr = String(payload.action || payload.type || "").toLowerCase();
+                    if (actionStr === 'stats' || actionStr === 'mic-volume' || actionStr === 'video-bitrate') return;
+
+                    let txt = "";
+
+                    // ค้นหาข้อความ (ตามรูปที่คุณส่งมา มันจะอยู่ใน payload.gotchat.msg)
+                    if (payload.gotchat && payload.gotchat.msg) {
+                        txt = payload.gotchat.msg;
+                    } else if (actionStr.includes('chat') || actionStr.includes('msg')) {
+                        txt = payload.msg || payload.message || payload.text || payload.chat;
+                    }
+
+                    // ถ้าดึงข้อความมาได้แล้ว...
+                    if (txt && typeof txt === 'string') {
+                        let cleanTxt = txt;
+                        
+                        // หั่นทิ้งตั้งแต่เริ่ม Tag <span หรือ <br> หรือ <b><i ที่ Ninja ชอบใส่ชื่อคนส่งมาด้วย
+                        // (นี่คือตัวการที่ทำให้มันขึ้นโค้ดประหลาดในรูปก่อนหน้านี้)
+                        cleanTxt = cleanTxt.split(/<span/i)[0];
+                        cleanTxt = cleanTxt.split(/<b><i/i)[0];
+                        cleanTxt = cleanTxt.split(/<br\s*\/?>/i)[0];
+                        
+                        // ถอด Tag ทั้งหมดออกอีกชั้นเพื่อความชัวร์ จะได้เหลือแค่ "555" เพียวๆ
+                        cleanTxt = cleanTxt.replace(/<[^>]*>?/gm, '').trim();
+
+                        if (cleanTxt !== "") {
+                            showToast(cleanTxt);
+                        }
+                    }
+                } catch(error) {
+                    console.error("Chat parsing error:", error);
                 }
             });
         }
 
+        // ฟังก์ชันแสดงกล่องข้อความ
+        let toastTimeout;
         function showToast(textToShow) {
             const toast = document.getElementById('msg-toast');
             const msgText = document.getElementById('msg-text');
@@ -239,17 +237,18 @@
             msgText.innerText = textToShow;
             toast.style.display = 'block';
             
+            // รีเซ็ตแอนิเมชันให้เด้งใหม่ทุกครั้ง
             toast.style.animation = 'none';
             toast.offsetHeight; 
             toast.style.animation = 'slideDown 0.3s';
             
-            // ลบโค้ดระบบสั่นออกแล้ว ตามคำขอ
+            // ยกเลิกเวลานับถอยหลังของเก่า (ถ้ามีข้อความส่งมาติดๆ กัน กล่องจะได้ไม่หายไปก่อน)
+            if(toastTimeout) clearTimeout(toastTimeout);
             
-            // ซ่อนอัตโนมัติ 10 วินาที
-            setTimeout(() => { toast.style.display = 'none'; }, 10000);
+            // ตั้งเวลาซ่อนอัตโนมัติ 10 วินาที
+            toastTimeout = setTimeout(() => { toast.style.display = 'none'; }, 10000);
         }
 
-        // ฟังก์ชันปิดกล่องข้อความด้วยตัวเอง
         function closeToast() {
             document.getElementById('msg-toast').style.display = 'none';
         }
@@ -262,22 +261,17 @@
         function toggleFullScreen() {
             const doc = window.document;
             const docEl = doc.documentElement;
-
             const requestFullScreen = docEl.requestFullscreen || docEl.webkitRequestFullscreen || docEl.mozRequestFullScreen || docEl.msRequestFullscreen;
             const cancelFullScreen = doc.exitFullscreen || doc.webkitExitFullscreen || doc.mozCancelFullScreen || doc.msExitFullscreen;
 
             if (!doc.fullscreenElement && !doc.webkitFullscreenElement && !doc.mozFullScreenElement && !doc.msFullscreenElement) {
                 if (requestFullScreen) {
-                    requestFullScreen.call(docEl).catch(err => {
-                        alert(`ไม่สามารถเปิดเต็มจอได้: ${err.message}`);
-                    });
+                    requestFullScreen.call(docEl).catch(err => { alert(`ไม่สามารถเปิดเต็มจอได้: ${err.message}`); });
                 } else {
                     alert("iPhone ไม่รองรับปุ่มกดเต็มจอ\n\nวิธีทำให้เต็มจอ:\n1. กดปุ่ม 'แชร์' ด้านล่างของ Safari\n2. เลือก 'เพิ่มไปยังหน้าจอโฮม' (Add to Home Screen)\n3. เปิดใช้งานผ่านไอคอนบนหน้าจอโฮม");
                 }
             } else {
-                if (cancelFullScreen) {
-                    cancelFullScreen.call(doc);
-                }
+                if (cancelFullScreen) cancelFullScreen.call(doc);
             }
         }
 
@@ -289,11 +283,8 @@
                 }
             } catch (err) {}
         }
-
         document.addEventListener('visibilitychange', () => {
-            if (wakeLock !== null && document.visibilityState === 'visible') {
-                requestWakeLock();
-            }
+            if (wakeLock !== null && document.visibilityState === 'visible') requestWakeLock();
         });
 
         function initMonitor() {
@@ -330,13 +321,10 @@
                     netIcon.innerText = '❌';
                 }
             }
-
             updateNetwork();
             window.addEventListener('online', updateNetwork);
             window.addEventListener('offline', updateNetwork);
-            if (navigator.connection) {
-                navigator.connection.addEventListener('change', updateNetwork);
-            }
+            if (navigator.connection) navigator.connection.addEventListener('change', updateNetwork);
         }
     </script>
 </body>
