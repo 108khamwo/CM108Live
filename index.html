@@ -87,6 +87,34 @@
         }
         @keyframes slideDown { from {transform: translate(-50%, -20px); opacity:0;} to {transform: translate(-50%, 0); opacity:1;} }
 
+        /* --- CHAT SEND PANEL (แผงส่งข้อความกลับ) --- */
+        #chat-panel {
+            position: fixed !important; bottom: 20px; left: 50%; transform: translateX(-50%);
+            width: 90%; max-width: 400px; background: rgba(0,0,0,0.85);
+            border: 1px solid rgba(255,255,255,0.1); border-top: 3px solid #007aff;
+            padding: 15px; border-radius: 12px; z-index: 2147483647 !important;
+            display: none; flex-direction: column; gap: 10px;
+            backdrop-filter: blur(10px); pointer-events: auto;
+        }
+        .chat-panel-close { position: absolute; top: 5px; right: 10px; color: #aaa; background: none; border: none; font-size: 16px; cursor: pointer; padding: 5px; }
+        .quick-replies { display: flex; gap: 8px; justify-content: space-between; margin-bottom: 5px; }
+        .quick-replies button {
+            flex: 1; background: #1a1a1a; color: white; border: 1px solid #333;
+            padding: 10px 5px; border-radius: 6px; font-size: 13px; cursor: pointer; font-family: 'Prompt', sans-serif; transition: 0.2s;
+        }
+        .quick-replies button:active { background: #007aff; border-color: #007aff; }
+        .chat-input-row { display: flex; gap: 8px; }
+        #chat-input {
+            flex: 1; background: #222; border: 1px solid #444; color: white;
+            padding: 10px; border-radius: 6px; font-family: 'Prompt', sans-serif; font-size: 14px;
+        }
+        #chat-input:focus { outline: none; border-color: #007aff; }
+        .btn-send {
+            background: #007aff; color: white; border: none; padding: 0 15px;
+            border-radius: 6px; font-weight: bold; cursor: pointer; font-family: 'Prompt', sans-serif;
+        }
+        .btn-send:active { background: #0056b3; }
+
         /* --- BLACK SCREEN --- */
         #ghost { 
             position: fixed !important; inset: 0; background: #000; z-index: 2147483647 !important; display: none; 
@@ -128,6 +156,7 @@
         </div>
 
         <div class="side-ctrl">
+            <button class="btn-act" onclick="toggleChat()" title="ส่งข้อความ">💬</button>
             <button class="btn-act" onclick="toggleFullScreen()" title="เต็มจอ">⛶</button>
             <button class="btn-act" onclick="toggleGhost()" title="พักหน้าจอ">🌙</button>
             <button class="btn-act btn-home" onclick="location.reload()" title="กลับหน้าแรก">HOME</button>
@@ -137,6 +166,21 @@
             <button class="toast-close" onclick="closeToast()">✕</button>
             <div style="font-size:10px; color:#aaa; margin-bottom:5px;">คำสั่งจากศูนย์ (MCR):</div>
             <span id="msg-text" style="font-size:20px; font-weight:bold; color:#fff;">--</span>
+        </div>
+
+        <!-- กล่องพิมพ์ข้อความตอบกลับ -->
+        <div id="chat-panel">
+            <button class="chat-panel-close" onclick="toggleChat()">✕</button>
+            <div style="font-size:14px; font-weight:bold; color:#fff; margin-bottom:5px;">ตอบกลับศูนย์ (MCR)</div>
+            <div class="quick-replies">
+                <button onclick="sendQuickChat('รับทราบ')">รับทราบ</button>
+                <button onclick="sendQuickChat('รอสักครู่')">รอสักครู่</button>
+                <button onclick="sendQuickChat('พร้อมแล้ว')">พร้อมแล้ว</button>
+            </div>
+            <div class="chat-input-row">
+                <input type="text" id="chat-input" placeholder="พิมพ์ข้อความ..." onkeypress="if(event.key === 'Enter') sendCustomChat()">
+                <button class="btn-send" onclick="sendCustomChat()">ส่ง</button>
+            </div>
         </div>
     </div>
 
@@ -250,6 +294,42 @@
 
         function closeToast() {
             document.getElementById('msg-toast').style.display = 'none';
+        }
+
+        // === ระบบส่งข้อความกลับหาศูนย์ MCR ===
+        function toggleChat() {
+            let panel = document.getElementById('chat-panel');
+            if (panel.style.display === 'flex') {
+                panel.style.display = 'none';
+            } else {
+                panel.style.display = 'flex';
+                document.getElementById('chat-input').focus();
+            }
+        }
+
+        function sendQuickChat(text) {
+            sendToNinjaChat(text);
+        }
+
+        function sendCustomChat() {
+            let input = document.getElementById('chat-input');
+            let text = input.value.trim();
+            if (text !== '') {
+                sendToNinjaChat(text);
+                input.value = ''; // เคลียร์ช่องพิมพ์หลังจากส่ง
+            }
+        }
+
+        function sendToNinjaChat(text) {
+            // ส่งข้อความวิ่งผ่าน Iframe กลับไปที่ระบบแชทหลักของ Ninja
+            let iframe = document.getElementById('vid');
+            if (iframe && iframe.contentWindow) {
+                iframe.contentWindow.postMessage({"chat": text}, '*');
+                
+                // ปิดกล่องข้อความและโชว์แจ้งเตือนว่าส่งสำเร็จแล้ว
+                toggleChat();
+                showToast("ส่งแล้ว: " + text);
+            }
         }
 
         function toggleGhost() {
