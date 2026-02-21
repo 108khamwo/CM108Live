@@ -112,13 +112,10 @@
     <div id="live-view">
         <iframe id="vid" allow="camera;microphone;fullscreen;display-capture;autoplay"></iframe>
 
-        <!-- แถบแสดงสถานะ (เน็ต + แบตเตอรี่) -->
+        <!-- แถบแสดงสถานะ (เน็ต) -->
         <div class="status-bar" id="status-bar" style="display: none;">
             <div class="status-item">
-                <span id="net-icon">📶</span> <span id="net-text">กำลังตรวจสอบ...</span>
-            </div>
-            <div class="status-item">
-                <span id="batt-icon">🔋</span> <span id="batt-text">--%</span>
+                <span id="net-icon">🟢</span> <span id="net-text">ตรวจสอบสัญญาณ...</span>
             </div>
         </div>
 
@@ -169,9 +166,8 @@
             g.style.display = (g.style.display === 'flex') ? 'none' : 'flex';
         }
 
-        // ระบบตรวจสอบสถานะเน็ตและแบตเตอรี่
+        // ระบบตรวจสอบสถานะเน็ต
         function initMonitor() {
-            // 1. ตรวจสอบสถานะ Network (ทำงานได้ดีบน Android/Chrome)
             function updateNetwork() {
                 const netText = document.getElementById('net-text');
                 const netIcon = document.getElementById('net-icon');
@@ -180,24 +176,28 @@
                     if (navigator.connection) {
                         const type = navigator.connection.effectiveType; // '4g', '3g', '2g'
                         const dl = navigator.connection.downlink || 0;
-                        netText.innerText = `${type.toUpperCase()} (${dl} Mbps)`;
                         
-                        if (type === '4g' || dl > 5) {
+                        // วิเคราะห์คุณภาพและแปลงเป็นคำที่เข้าใจง่าย
+                        if (type === '4g' || dl >= 3) {
+                            netText.innerText = 'สัญญาณดีเยี่ยม (เน็ตแรง)';
                             netText.className = 'text-good';
-                            netIcon.innerText = '📶';
-                        } else if (type === '3g' || dl > 1) {
+                            netIcon.innerText = '🟢';
+                        } else if (type === '3g' || dl >= 1) {
+                            netText.innerText = 'สัญญาณปานกลาง (พอใช้)';
                             netText.className = 'text-warn';
-                            netIcon.innerText = '📶';
+                            netIcon.innerText = '🟡';
                         } else {
+                            netText.innerText = 'สัญญาณอ่อน (เน็ตช้า)';
                             netText.className = 'text-bad';
-                            netIcon.innerText = '⚠️';
+                            netIcon.innerText = '🔴';
                         }
                     } else {
-                        netText.innerText = 'Online';
+                        netText.innerText = 'เชื่อมต่อแล้ว';
                         netText.className = 'text-good';
+                        netIcon.innerText = '🟢';
                     }
                 } else {
-                    netText.innerText = 'Offline';
+                    netText.innerText = 'ขาดการเชื่อมต่อ (ออฟไลน์)';
                     netText.className = 'text-bad';
                     netIcon.innerText = '❌';
                 }
@@ -209,32 +209,6 @@
             window.addEventListener('offline', updateNetwork);
             if (navigator.connection) {
                 navigator.connection.addEventListener('change', updateNetwork);
-            }
-
-            // 2. ตรวจสอบสถานะแบตเตอรี่ (Battery API - หากเบราว์เซอร์รองรับ)
-            if ('getBattery' in navigator) {
-                navigator.getBattery().then(function(battery) {
-                    function updateBattery() {
-                        const level = Math.round(battery.level * 100);
-                        const battText = document.getElementById('batt-text');
-                        const battIcon = document.getElementById('batt-icon');
-                        
-                        battText.innerText = level + '%';
-                        battIcon.innerText = battery.charging ? '⚡' : '🔋';
-                        
-                        if (level <= 20 && !battery.charging) {
-                            battText.className = 'text-bad';
-                        } else {
-                            battText.className = '';
-                        }
-                    }
-                    updateBattery();
-                    battery.addEventListener('levelchange', updateBattery);
-                    battery.addEventListener('chargingchange', updateBattery);
-                });
-            } else {
-                // หากอุปกรณ์ไม่รองรับ (เช่น iOS บางเวอร์ชั่น)
-                document.getElementById('batt-text').innerText = 'ไม่รองรับ';
             }
         }
     </script>
