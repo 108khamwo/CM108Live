@@ -44,7 +44,7 @@
 
         /* --- STATUS BAR (แถบสถานะซ้ายบน) --- */
         .status-bar {
-            position: absolute; top: 15px; left: 15px; z-index: 60;
+            position: fixed !important; top: 15px; left: 15px; z-index: 999999 !important;
             background: rgba(0,0,0,0.6); padding: 8px 12px; border-radius: 20px;
             color: white; font-size: 12px; display: flex; gap: 15px; align-items: center;
             backdrop-filter: blur(5px); border: 1px solid rgba(255,255,255,0.1);
@@ -58,11 +58,11 @@
 
         /* --- CONTROL (แถบขวา) --- */
         .side-ctrl {
-            position: absolute; right: 15px; top: 50%; transform: translateY(-50%);
+            position: fixed !important; right: 15px; top: 50%; transform: translateY(-50%);
             display: flex; flex-direction: column; gap: 15px; align-items: center;
             background: rgba(0,0,0,0.6); padding: 15px 10px; border-radius: 35px;
             backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1);
-            z-index: 60; pointer-events: auto;
+            z-index: 999999 !important; pointer-events: auto;
         }
 
         .btn-act { 
@@ -75,10 +75,10 @@
 
         /* --- MESSAGE POPUP (แถบข้อความเด้ง) --- */
         #msg-toast {
-            position: absolute; top: 20%; left: 50%; transform: translate(-50%, -50%);
+            position: fixed !important; top: 20%; left: 50%; transform: translate(-50%, -50%);
             width: 85%; max-width: 400px; background: rgba(0,0,0,0.9); border-left: 5px solid #ff3b30;
             color: white; padding: 15px 20px; border-radius: 8px; text-align: center;
-            display: none; z-index: 2000; pointer-events: none;
+            display: none; z-index: 2147483647 !important; pointer-events: none;
             box-shadow: 0 4px 15px rgba(0,0,0,0.5);
             animation: slideDown 0.3s;
         }
@@ -86,7 +86,7 @@
 
         /* --- BLACK SCREEN --- */
         #ghost { 
-            position: fixed; inset: 0; background: #000; z-index: 999; display: none; 
+            position: fixed !important; inset: 0; background: #000; z-index: 2147483647 !important; display: none; 
             align-items: center; justify-content: center; flex-direction: column; color: #444; 
         }
     </style>
