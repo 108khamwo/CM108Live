@@ -184,19 +184,44 @@
             initMonitor();
             requestWakeLock();
 
-            // ดักจับข้อความแชทจาก Dashboard เพื่อโชว์ Popup
+            // === ปรับปรุงระบบดักจับข้อความแชทขั้นสูง ===
             window.addEventListener('message', function(e) {
-                if (e.data.action === 'chat' || e.data.msg === 'chat') {
-                    const txt = e.data.value || e.data.content;
-                    if(txt) {
-                        const toast = document.getElementById('msg-toast');
-                        document.getElementById('msg-text').innerText = txt;
-                        toast.style.display = 'block';
-                        // สั่นเตือนมือถือ
-                        if(navigator.vibrate) navigator.vibrate([200, 100, 200]);
-                        // ซ่อนอัตโนมัติหลัง 10 วินาที
-                        setTimeout(() => { toast.style.display = 'none'; }, 10000);
+                let data = e.data;
+                
+                // ถ้าระบบส่งมาเป็น String (ข้อความดิบ) ให้แปลงเป็น Object ก่อน
+                if (typeof data === 'string') {
+                    try { 
+                        data = JSON.parse(data); 
+                    } catch (err) { 
+                        return; // ถ้าไม่ใช่ JSON ข้ามไปเลย
                     }
+                }
+                
+                if (!data) return;
+
+                // ตรวจสอบโครงสร้างข้อความหลายๆ รูปแบบที่ VDO.Ninja อาจจะส่งมา
+                let txt = "";
+                if (data.action === 'chat' || data.type === 'chat') {
+                    txt = data.value || data.msg || data.content || data.text;
+                } else if (data.chat) {
+                    txt = data.chat;
+                } else if (data.msg === 'chat') {
+                    txt = data.value || data.content;
+                }
+
+                // ถ้าเจอข้อความแชท ให้โชว์ขึ้นมาทันที
+                if (txt) {
+                    const toast = document.getElementById('msg-toast');
+                    document.getElementById('msg-text').innerText = txt;
+                    toast.style.display = 'block';
+                    
+                    // สั่นเตือนมือถือ (ทำงานได้ดีบน Android)
+                    if(navigator.vibrate) {
+                        try { navigator.vibrate([200, 100, 200]); } catch(e){}
+                    }
+                    
+                    // เคลียร์และซ่อนหลังผ่านไป 10 วินาที
+                    setTimeout(() => { toast.style.display = 'none'; }, 10000);
                 }
             });
         }
@@ -206,7 +231,7 @@
             g.style.display = (g.style.display === 'flex') ? 'none' : 'flex';
         }
 
-        // ระบบเต็มจอ (Fullscreen) - อัปเดตให้รองรับการแจ้งเตือนบน iOS
+        // ระบบเต็มจอ (Fullscreen)
         function toggleFullScreen() {
             const doc = window.document;
             const docEl = doc.documentElement;
@@ -220,7 +245,6 @@
                         alert(`ไม่สามารถเปิดเต็มจอได้: ${err.message}`);
                     });
                 } else {
-                    // แจ้งเตือนสำหรับ iPhone (iOS Safari)
                     alert("iPhone ไม่รองรับปุ่มกดเต็มจอ\n\nวิธีทำให้เต็มจอ:\n1. กดปุ่ม 'แชร์' ด้านล่างของ Safari\n2. เลือก 'เพิ่มไปยังหน้าจอโฮม' (Add to Home Screen)\n3. เปิดใช้งานผ่านไอคอนบนหน้าจอโฮม");
                 }
             } else {
@@ -243,7 +267,6 @@
             }
         }
 
-        // ขอ Wake Lock ใหม่เมื่อผู้ใช้สลับแอปแล้วกลับมาที่หน้าเว็บ
         document.addEventListener('visibilitychange', () => {
             if (wakeLock !== null && document.visibilityState === 'visible') {
                 requestWakeLock();
@@ -287,7 +310,6 @@
                 }
             }
 
-            // เรียกทำงานครั้งแรกและผูก Event
             updateNetwork();
             window.addEventListener('online', updateNetwork);
             window.addEventListener('offline', updateNetwork);
