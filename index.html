@@ -26,7 +26,7 @@
         .m-btn span { font-weight: bold; font-size: 14px; }
         .m-btn small { font-size: 10px; opacity: 0.8; }
         
-        .cam-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .cam-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
         .c-card { 
             background: linear-gradient(145deg, #222, #1b1b1b); border: 1px solid #333; 
             border-radius: 12px; padding: 25px 0; cursor: pointer; color: white; transition: 0.2s;
@@ -37,6 +37,20 @@
         /* --- LIVE VIEW --- */
         #live-view { display: none; position: fixed; inset: 0; background: #000; z-index: 50; }
         iframe { width: 100%; height: 100%; border: none; }
+
+        /* --- STATUS BAR (แถบสถานะซ้ายบน) --- */
+        .status-bar {
+            position: absolute; top: 15px; left: 15px; z-index: 60;
+            background: rgba(0,0,0,0.6); padding: 8px 12px; border-radius: 20px;
+            color: white; font-size: 12px; display: flex; gap: 15px; align-items: center;
+            backdrop-filter: blur(5px); border: 1px solid rgba(255,255,255,0.1);
+            pointer-events: none; /* กดทะลุได้ ไม่บังปุ่ม */
+            font-weight: 500;
+        }
+        .status-item { display: flex; align-items: center; gap: 5px; }
+        .text-good { color: #34c759; }
+        .text-warn { color: #ffcc00; }
+        .text-bad { color: #ff3b30; }
 
         /* --- CONTROL (แถบขวา) --- */
         .side-ctrl {
@@ -98,7 +112,17 @@
     <div id="live-view">
         <iframe id="vid" allow="camera;microphone;fullscreen;display-capture;autoplay"></iframe>
 
-        <!-- แถบปุ่มลอยด้านขวา (เอาซูมออกแล้ว) -->
+        <!-- แถบแสดงสถานะ (เน็ต + แบตเตอรี่) -->
+        <div class="status-bar" id="status-bar" style="display: none;">
+            <div class="status-item">
+                <span id="net-icon">📶</span> <span id="net-text">กำลังตรวจสอบ...</span>
+            </div>
+            <div class="status-item">
+                <span id="batt-icon">🔋</span> <span id="batt-text">--%</span>
+            </div>
+        </div>
+
+        <!-- แถบปุ่มลอยด้านขวา -->
         <div class="side-ctrl">
             <button class="btn-act" onclick="toggleGhost()" title="พักหน้าจอ">🌙</button>
             <button class="btn-act btn-home" onclick="location.reload()" title="กลับหน้าแรก">HOME</button>
@@ -128,19 +152,90 @@
             else if(mode === 'safe') p = "&width=1280&height=720&bitrate=2500&framerate=30";
             else p = "&quality=1";
 
-            // &clean=0 : เมนู Ninja อยู่ครบ
-            // ไม่ใส่ &autostart : มีปุ่ม Start ก่อนเข้ากล้อง
             let url = "https://vdo.ninja/?push=" + id + "&room=CM108_NewsRoom" + p + 
                       "&clean=0&viewchat=1&api=1&label=" + id + "&select";
 
             document.getElementById('vid').src = url;
             document.getElementById('lobby').style.display = 'none';
             document.getElementById('live-view').style.display = 'block';
+            
+            // เปิดแสดงแถบสถานะ
+            document.getElementById('status-bar').style.display = 'flex';
+            initMonitor();
         }
 
         function toggleGhost() {
             let g = document.getElementById('ghost');
             g.style.display = (g.style.display === 'flex') ? 'none' : 'flex';
+        }
+
+        // ระบบตรวจสอบสถานะเน็ตและแบตเตอรี่
+        function initMonitor() {
+            // 1. ตรวจสอบสถานะ Network (ทำงานได้ดีบน Android/Chrome)
+            function updateNetwork() {
+                const netText = document.getElementById('net-text');
+                const netIcon = document.getElementById('net-icon');
+                
+                if (navigator.onLine) {
+                    if (navigator.connection) {
+                        const type = navigator.connection.effectiveType; // '4g', '3g', '2g'
+                        const dl = navigator.connection.downlink || 0;
+                        netText.innerText = `${type.toUpperCase()} (${dl} Mbps)`;
+                        
+                        if (type === '4g' || dl > 5) {
+                            netText.className = 'text-good';
+                            netIcon.innerText = '📶';
+                        } else if (type === '3g' || dl > 1) {
+                            netText.className = 'text-warn';
+                            netIcon.innerText = '📶';
+                        } else {
+                            netText.className = 'text-bad';
+                            netIcon.innerText = '⚠️';
+                        }
+                    } else {
+                        netText.innerText = 'Online';
+                        netText.className = 'text-good';
+                    }
+                } else {
+                    netText.innerText = 'Offline';
+                    netText.className = 'text-bad';
+                    netIcon.innerText = '❌';
+                }
+            }
+
+            // เรียกทำงานครั้งแรกและผูก Event
+            updateNetwork();
+            window.addEventListener('online', updateNetwork);
+            window.addEventListener('offline', updateNetwork);
+            if (navigator.connection) {
+                navigator.connection.addEventListener('change', updateNetwork);
+            }
+
+            // 2. ตรวจสอบสถานะแบตเตอรี่ (Battery API - หากเบราว์เซอร์รองรับ)
+            if ('getBattery' in navigator) {
+                navigator.getBattery().then(function(battery) {
+                    function updateBattery() {
+                        const level = Math.round(battery.level * 100);
+                        const battText = document.getElementById('batt-text');
+                        const battIcon = document.getElementById('batt-icon');
+                        
+                        battText.innerText = level + '%';
+                        battIcon.innerText = battery.charging ? '⚡' : '🔋';
+                        
+                        if (level <= 20 && !battery.charging) {
+                            battText.className = 'text-bad';
+                        } else {
+                            battText.className = '';
+                        }
+                    }
+                    updateBattery();
+                    battery.addEventListener('levelchange', updateBattery);
+                    battery.addEventListener('chargingchange', updateBattery);
+                });
+            } else {
+                // หากอุปกรณ์ไม่รองรับ (เช่น iOS บางเวอร์ชั่น)
+                document.getElementById('batt-text').innerText = 'ไม่รองรับ';
+            }
         }
     </script>
 </body>
