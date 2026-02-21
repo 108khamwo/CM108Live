@@ -3,6 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <!-- เพิ่ม Meta Tags สำหรับ iOS เพื่อให้แสดงผลเต็มจอเมื่อ Add to Home Screen -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="CM108 Live">
+    
     <title>CM108 Mobile Unit</title>
     <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;500;700&display=swap" rel="stylesheet">
     <style>
@@ -168,15 +173,26 @@
             g.style.display = (g.style.display === 'flex') ? 'none' : 'flex';
         }
 
-        // ระบบเต็มจอ (Fullscreen)
+        // ระบบเต็มจอ (Fullscreen) - อัปเดตให้รองรับการแจ้งเตือนบน iOS
         function toggleFullScreen() {
-            if (!document.fullscreenElement) {
-                document.documentElement.requestFullscreen().catch(err => {
-                    console.log(`ไม่สามารถเปิดโหมดเต็มจอได้: ${err.message}`);
-                });
+            const doc = window.document;
+            const docEl = doc.documentElement;
+
+            const requestFullScreen = docEl.requestFullscreen || docEl.webkitRequestFullscreen || docEl.mozRequestFullScreen || docEl.msRequestFullscreen;
+            const cancelFullScreen = doc.exitFullscreen || doc.webkitExitFullscreen || doc.mozCancelFullScreen || doc.msExitFullscreen;
+
+            if (!doc.fullscreenElement && !doc.webkitFullscreenElement && !doc.mozFullScreenElement && !doc.msFullscreenElement) {
+                if (requestFullScreen) {
+                    requestFullScreen.call(docEl).catch(err => {
+                        alert(`ไม่สามารถเปิดเต็มจอได้: ${err.message}`);
+                    });
+                } else {
+                    // แจ้งเตือนสำหรับ iPhone (iOS Safari)
+                    alert("iPhone ไม่รองรับปุ่มกดเต็มจอ\n\nวิธีทำให้เต็มจอ:\n1. กดปุ่ม 'แชร์' ด้านล่างของ Safari\n2. เลือก 'เพิ่มไปยังหน้าจอโฮม' (Add to Home Screen)\n3. เปิดใช้งานผ่านไอคอนบนหน้าจอโฮม");
+                }
             } else {
-                if (document.exitFullscreen) {
-                    document.exitFullscreen();
+                if (cancelFullScreen) {
+                    cancelFullScreen.call(doc);
                 }
             }
         }
