@@ -74,6 +74,17 @@
         .btn-act:active { background: white; color: black; }
         .btn-home { background: #ff3b30; font-size: 11px; font-weight: bold; }
 
+        /* --- MESSAGE POPUP (แถบข้อความเด้ง) --- */
+        #msg-toast {
+            position: absolute; top: 20%; left: 50%; transform: translate(-50%, -50%);
+            width: 85%; max-width: 400px; background: rgba(0,0,0,0.9); border-left: 5px solid #ff3b30;
+            color: white; padding: 15px 20px; border-radius: 8px; text-align: center;
+            display: none; z-index: 2000; pointer-events: none;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            animation: slideDown 0.3s;
+        }
+        @keyframes slideDown { from {transform: translate(-50%, -20px); opacity:0;} to {transform: translate(-50%, 0); opacity:1;} }
+
         /* --- BLACK SCREEN --- */
         #ghost { 
             position: fixed; inset: 0; background: #000; z-index: 999; display: none; 
@@ -130,6 +141,12 @@
             <button class="btn-act" onclick="toggleGhost()" title="พักหน้าจอ">🌙</button>
             <button class="btn-act btn-home" onclick="location.reload()" title="กลับหน้าแรก">HOME</button>
         </div>
+
+        <!-- กล่องข้อความแจ้งเตือนจากศูนย์ -->
+        <div id="msg-toast">
+            <div style="font-size:10px; color:#aaa; margin-bottom:5px;">คำสั่งจากศูนย์ (MCR):</div>
+            <span id="msg-text" style="font-size:20px; font-weight:bold;">--</span>
+        </div>
     </div>
 
     <!-- โหมดพักหน้าจอ -->
@@ -166,6 +183,22 @@
             document.getElementById('status-bar').style.display = 'flex';
             initMonitor();
             requestWakeLock();
+
+            // ดักจับข้อความแชทจาก Dashboard เพื่อโชว์ Popup
+            window.addEventListener('message', function(e) {
+                if (e.data.action === 'chat' || e.data.msg === 'chat') {
+                    const txt = e.data.value || e.data.content;
+                    if(txt) {
+                        const toast = document.getElementById('msg-toast');
+                        document.getElementById('msg-text').innerText = txt;
+                        toast.style.display = 'block';
+                        // สั่นเตือนมือถือ
+                        if(navigator.vibrate) navigator.vibrate([200, 100, 200]);
+                        // ซ่อนอัตโนมัติหลัง 10 วินาที
+                        setTimeout(() => { toast.style.display = 'none'; }, 10000);
+                    }
+                }
+            });
         }
 
         function toggleGhost() {
