@@ -18,7 +18,8 @@
             position: absolute; inset: 0; z-index: 100; background: #111; 
             display: flex; flex-direction: column; padding: 20px; text-align: center; overflow-y: auto; 
         }
-        h1 { color: #ff3b30; margin-bottom: 10px; font-size: 26px; }
+        /* เปลี่ยนเป็นสีฟ้า CM108 */
+        h1 { color: #007aff; margin-bottom: 10px; font-size: 26px; }
         .label { color: #888; font-size: 14px; margin: 15px 0 10px; border-bottom: 1px solid #333; padding-bottom: 5px; text-align: left; }
         
         .mode-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
@@ -26,7 +27,8 @@
             background: #1a1a1a; border: 1px solid #333; border-radius: 12px; padding: 15px 5px; 
             color: #888; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 5px; 
         }
-        .m-btn.active { background: #ff3b30; color: white; border-color: #ff3b30; }
+        /* เปลี่ยนสีเมื่อถูกเลือกเป็นสีฟ้า */
+        .m-btn.active { background: #007aff; color: white; border-color: #007aff; }
         .m-btn span { font-weight: bold; font-size: 14px; }
         .m-btn small { font-size: 10px; opacity: 0.8; }
         
@@ -35,7 +37,7 @@
             background: linear-gradient(145deg, #222, #1b1b1b); border: 1px solid #333; 
             border-radius: 12px; padding: 25px 0; cursor: pointer; color: white; transition: 0.2s;
         }
-        .c-card:active { transform: scale(0.98); border-color: #ff3b30; }
+        .c-card:active { transform: scale(0.98); border-color: #007aff; }
         .c-card strong { display: block; font-size: 18px; margin-bottom: 5px; }
 
         /* --- LIVE VIEW --- */
@@ -48,14 +50,14 @@
             background: rgba(0,0,0,0.6); padding: 8px 12px; border-radius: 20px;
             color: white; font-size: 12px; display: flex; gap: 15px; align-items: center;
             backdrop-filter: blur(5px); border: 1px solid rgba(255,255,255,0.1);
-            pointer-events: auto; /* เปิดให้กดได้เพื่อทดสอบแชท */
+            pointer-events: auto;
             cursor: pointer;
             font-weight: 500;
         }
         .status-item { display: flex; align-items: center; gap: 5px; }
         .text-good { color: #34c759; }
         .text-warn { color: #ffcc00; }
-        .text-bad { color: #ff3b30; }
+        .text-bad { color: #ff3b30; } /* สีแดงคงไว้สำหรับแจ้งเตือนเน็ตไม่ดี */
 
         /* --- CONTROL (แถบขวา) --- */
         .side-ctrl {
@@ -72,12 +74,14 @@
             cursor: pointer; display: flex; align-items: center; justify-content: center; 
         }
         .btn-act:active { background: white; color: black; }
-        .btn-home { background: #ff3b30; font-size: 11px; font-weight: bold; }
+        /* ปุ่ม Home สีฟ้า */
+        .btn-home { background: #007aff; font-size: 11px; font-weight: bold; }
 
         /* --- MESSAGE POPUP (แถบข้อความเด้ง) --- */
         #msg-toast {
             position: fixed !important; top: 20%; left: 50%; transform: translate(-50%, -50%);
-            width: 85%; max-width: 400px; background: rgba(0,0,0,0.9); border-left: 5px solid #ff3b30;
+            width: 85%; max-width: 400px; background: rgba(0,0,0,0.9); 
+            border-left: 5px solid #007aff; /* ขอบซ้ายสีฟ้า */
             color: white; padding: 15px 20px; border-radius: 8px; text-align: center;
             display: none; z-index: 2147483647 !important; pointer-events: none;
             box-shadow: 0 4px 15px rgba(0,0,0,0.5);
@@ -127,7 +131,7 @@
         <iframe id="vid" allow="camera;microphone;fullscreen;display-capture;autoplay"></iframe>
 
         <!-- แตะที่แถบสถานะเพื่อทดสอบระบบแชท -->
-        <div class="status-bar" id="status-bar" style="display: none;" onclick="showToast('TEST: ระบบแจ้งเตือนทำงานปกติ พร้อมรับคำสั่ง!')">
+        <div class="status-bar" id="status-bar" style="display: none;" onclick="showToast('ทดสอบข้อความ 12345')">
             <div class="status-item"><span id="net-icon">🟢</span> <span id="net-text">ตรวจสอบสัญญาณ...</span></div>
         </div>
 
@@ -139,7 +143,7 @@
 
         <div id="msg-toast">
             <div style="font-size:10px; color:#aaa; margin-bottom:5px;">คำสั่งจากศูนย์ (MCR):</div>
-            <span id="msg-text" style="font-size:20px; font-weight:bold;">--</span>
+            <span id="msg-text" style="font-size:20px; font-weight:bold; color:#fff;">--</span>
         </div>
     </div>
 
@@ -176,7 +180,7 @@
             initMonitor();
             requestWakeLock();
 
-            // === ระบบดักจับแชทครอบจักรวาล (Super Catcher) ===
+            // === ระบบดักจับและกรองข้อความ ===
             window.addEventListener('message', function(e) {
                 let data = e.data;
                 
@@ -184,34 +188,43 @@
                     try { data = JSON.parse(data); } catch (err) { return; }
                 }
                 if (!data || typeof data !== 'object') return;
-
-                // กรองข้อมูลขยะ (พวกสถานะเน็ตที่ส่งมารัวๆ) ทิ้งไป
+                
+                // กรองข้อมูลสถิติที่ส่งมารัวๆ ทิ้งไป
                 if (data.action === 'stats' || data.type === 'stats' || data.action === 'mic-volume' || data.action === 'video-bitrate') return;
 
-                // แปลงทุกอย่างที่ส่งมาเป็น string เพื่อสแกนหาคำว่า chat
-                let str = JSON.stringify(data).toLowerCase();
-                
-                // ถ้าในข้อมูลมีคำที่เกี่ยวกับแชท ให้จับมาโชว์ให้หมด
-                if (str.includes('chat') || str.includes('message') || str.includes('msg')) {
-                    
-                    // พยายามดึงข้อความออกมา
-                    let txt = data.msg || data.message || data.value || data.text || data.chat;
-                    
-                    if (data.action === 'chat' && data.data && typeof data.data === 'string') {
-                         txt = data.data;
-                    }
+                let payload = (data.data && typeof data.data === 'object') ? data.data : data;
+                let txt = "";
 
-                    // ถ้าดึงข้อความไม่ออก (Ninja ส่งมาแปลกๆ) ให้โชว์โค้ดดิบๆ ขึ้นไปเลย จะได้รู้ว่าส่งมาถึงแล้ว!
-                    if (!txt || typeof txt !== 'string') {
-                        txt = "ได้รับข้อความ: " + str.substring(0, 100);
+                // ตรวจจับข้อความจาก Ninja (ในรูปคือ data.gotchat.msg)
+                if (payload.gotchat && payload.gotchat.msg) {
+                    txt = payload.gotchat.msg;
+                } else {
+                    let actionStr = String(payload.action || payload.type || "").toLowerCase();
+                    if (actionStr.includes('chat') || actionStr.includes('message') || actionStr.includes('msg')) {
+                        txt = payload.msg || payload.message || payload.value || payload.text || payload.chat;
+                    } else if (typeof payload.chat === 'string') {
+                        txt = payload.chat;
                     }
+                }
 
-                    showToast(txt);
+                if (txt && typeof txt === 'string') {
+                    // 1. ตัดโค้ด HTML ของ Ninja ที่ชอบต่อท้ายมา (เช่น <b><i><span class='chat_director...)
+                    let cleanTxt = txt.split('<b><i><span')[0];
+                    cleanTxt = cleanTxt.split('<br><span')[0];
+                    
+                    // 2. ใช้ Element เสมือน เพื่อละลายโค้ด HTML ที่เหลือทิ้งไป เอาแต่ Text เพียวๆ
+                    let tmp = document.createElement("div");
+                    tmp.innerHTML = cleanTxt;
+                    cleanTxt = (tmp.textContent || tmp.innerText || "").trim();
+
+                    // ถ้ากรองเสร็จแล้วยังมีข้อความเหลืออยู่ ให้โชว์ขึ้นจอเลย
+                    if (cleanTxt !== "") {
+                        showToast(cleanTxt);
+                    }
                 }
             });
         }
 
-        // ฟังก์ชันแยกสำหรับเรียกโชว์ Popup
         function showToast(textToShow) {
             const toast = document.getElementById('msg-toast');
             const msgText = document.getElementById('msg-text');
@@ -219,18 +232,14 @@
             msgText.innerText = textToShow;
             toast.style.display = 'block';
             
-            // รีเซ็ตแอนิเมชัน
             toast.style.animation = 'none';
             toast.offsetHeight; 
             toast.style.animation = 'slideDown 0.3s';
             
-            // สั่นเตือนมือถือ
-            if(navigator.vibrate) {
-                try { navigator.vibrate([200, 100, 200, 100, 200]); } catch(err){}
-            }
+            // ลบโค้ดระบบสั่นออกแล้ว ตามคำขอ
             
-            // ซ่อนอัตโนมัติ 15 วินาที
-            setTimeout(() => { toast.style.display = 'none'; }, 15000);
+            // ซ่อนอัตโนมัติ 10 วินาที
+            setTimeout(() => { toast.style.display = 'none'; }, 10000);
         }
 
         function toggleGhost() {
