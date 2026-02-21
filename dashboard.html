@@ -14,7 +14,7 @@
         }
         .logo { font-size: 18px; font-weight: bold; letter-spacing: 1px; }
         .logo span { color: #ff3b30; }
-        .status { font-size: 12px; color: #888; display: flex; align-items: center; gap: 5px; }
+        .status { font-size: 12px; color: #888; display: flex; align-items: center; gap: 5px; cursor: pointer; }
         .dot { width: 8px; height: 8px; background: #0f0; border-radius: 50%; box-shadow: 0 0 5px #0f0; }
 
         /* Main View */
@@ -32,6 +32,25 @@
             box-shadow: 0 0 20px rgba(255,59,48,0.4); transition: transform 0.2s;
         }
         .start-btn:active { transform: scale(0.95); }
+
+        /* --- MESSAGE POPUP (สำหรับฝั่งศูนย์ MCR) --- */
+        #msg-toast {
+            position: fixed !important; top: 15%; left: 50%; transform: translate(-50%, -50%);
+            width: 80%; max-width: 600px; background: rgba(0,0,0,0.95); 
+            border-left: 6px solid #0f0; 
+            color: white; padding: 20px 30px; border-radius: 10px; text-align: center;
+            display: none; z-index: 2147483647 !important; pointer-events: auto;
+            box-shadow: 0 10px 30px rgba(0,255,0,0.2);
+        }
+        .toast-close {
+            position: absolute; top: 10px; right: 15px; color: #888; font-size: 20px; 
+            background: none; border: none; cursor: pointer; padding: 5px;
+        }
+        .toast-close:hover { color: #fff; }
+        @keyframes slideDownMCR { 
+            0% { transform: translate(-50%, -30px); opacity: 0; } 
+            100% { transform: translate(-50%, 0); opacity: 1; } 
+        }
     </style>
 </head>
 <body>
@@ -42,19 +61,129 @@
 
     <header>
         <div class="logo">CM108 <span>MASTER CONTROL</span></div>
-        <div class="status"><span class="dot"></span> ONLINE SYSTEM</div>
+        <div class="status" onclick="showToast('ทดสอบข้อความแจ้งเตือนที่ศูนย์ MCR', 'ระบบหลังบ้าน')">
+            <span class="dot"></span> ONLINE SYSTEM
+        </div>
     </header>
 
     <main>
         <iframe id="mcr" allow="camera;microphone;fullscreen;display-capture;autoplay"></iframe>
+
+        <!-- กล่องแจ้งเตือนข้อความเด้ง -->
+        <div id="msg-toast">
+            <button class="toast-close" onclick="closeToast()">✕</button>
+            <div id="sender-title" style="font-size:14px; color:#0f0; margin-bottom:8px; font-weight:bold;">📥 รับแจ้งจากทีมข่าวภาคสนาม:</div>
+            <span id="msg-text" style="font-size:32px; font-weight:bold; color:#fff;">--</span>
+        </div>
     </main>
 
     <script>
         function startSystem() {
             document.getElementById('start-overlay').style.display = 'none';
-            // ใช้ URL Director แบบมาตรฐาน เพื่อให้ฟีเจอร์ Chat ทำงานสมบูรณ์ 100%
-            let url = "https://vdo.ninja/?director=CM108_NewsRoom&autoadd=1&quality=0&clean=0";
+            
+            // ใช้ &api=1 เพื่อเปิดรับข้อมูล
+            let url = "https://vdo.ninja/?director=CM108_NewsRoom&autoadd=1&quality=0&clean=0&api=1";
             document.getElementById('mcr').src = url;
+
+            // === ระบบดักจับข้อความ (ระบุชื่อคนส่งได้) ===
+            window.addEventListener('message', function(e) {
+                if (!e.data) return;
+
+                let rawStr = typeof e.data === 'string' ? e.data : JSON.stringify(e.data);
+                if (rawStr.includes('"stats"') || rawStr.includes('"video-bitrate"') || rawStr.includes('"mic-volume"')) return;
+                
+                let rawMsg = null;
+                let senderName = "ทีมข่าวภาคสนาม";
+
+                function extractMsg(item) {
+                    if (typeof item === 'string') {
+                        if (item.trim().startsWith('{')) {
+                            try { item = JSON.parse(item); } catch(err) { return; }
+                        } else return;
+                    }
+                    if (typeof item !== 'object' || item === null) return;
+
+                    // ค้นหาข้อความ
+                    if (item.action === 'chat' || item.type === 'chat' || item.gotchat) {
+                        if (item.msg) rawMsg = item.msg;
+                        else if (item.chat) rawMsg = item.chat;
+                        else if (item.value) rawMsg = item.value;
+                        else if (item.gotchat && item.gotchat.msg) rawMsg = item.gotchat.msg;
+
+                        // ค้นหาชื่อคนส่ง
+                        if (item.from) senderName = item.from;
+                        else if (item.label) senderName = item.label;
+                        return;
+                    }
+
+                    if (item.gotchat && item.gotchat.msg) {
+                        rawMsg = item.gotchat.msg;
+                        return;
+                    }
+
+                    for (let key in item) {
+                        if (typeof item[key] === 'object') extractMsg(item[key]);
+                    }
+                }
+
+                try {
+                    extractMsg(e.data);
+
+                    if (rawMsg && typeof rawMsg === 'string') {
+                        let cleanTxt = rawMsg.split('<')[0].trim();
+                        if (cleanTxt === "") {
+                            cleanTxt = rawMsg.replace(/<[^>]*>?/gm, '').trim();
+                        }
+
+                        if (cleanTxt !== "") {
+                            showToast(cleanTxt, senderName);
+                        }
+                    }
+                } catch(error) {
+                    console.error("Chat parsing error:", error);
+                }
+            });
+        }
+
+        let toastTimeout;
+        function showToast(textToShow, sender = "ทีมข่าวภาคสนาม") {
+            const toast = document.getElementById('msg-toast');
+            const msgText = document.getElementById('msg-text');
+            const senderTitle = document.getElementById('sender-title');
+            
+            // โชว์ชื่อกล้องที่ส่งมา
+            senderTitle.innerText = `📥 รับแจ้งจาก [ ${sender} ]:`;
+            msgText.innerText = textToShow;
+            
+            toast.style.display = 'block';
+            toast.style.animation = 'none';
+            toast.offsetHeight; 
+            toast.style.animation = 'slideDownMCR 0.4s cubic-bezier(0.18, 0.89, 0.32, 1.28)';
+            
+            playAlertSound();
+            
+            if(toastTimeout) clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => { toast.style.display = 'none'; }, 15000);
+        }
+
+        function closeToast() {
+            document.getElementById('msg-toast').style.display = 'none';
+        }
+
+        function playAlertSound() {
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(880, ctx.currentTime); 
+                gain.gain.setValueAtTime(0.3, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.6);
+                osc.start(ctx.currentTime);
+                osc.stop(ctx.currentTime + 0.6);
+            } catch(e) {}
         }
     </script>
 </body>
