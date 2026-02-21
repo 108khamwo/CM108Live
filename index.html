@@ -173,57 +173,55 @@
             initMonitor();
             requestWakeLock();
 
-            // === ระบบดักจับและกรองข้อความ (รุ่นแกะกล่อง 2 ชั้น) ===
+            // === ระบบดักจับและกรองข้อความ (V. Bulletproof ตัดจบที่ '<') ===
             window.addEventListener('message', function(e) {
                 try {
                     let data = e.data;
-                    
-                    // ขั้นที่ 1: แกะกล่องชั้นนอกสุด
+                    if (!data) return;
+
+                    // 1. ลองแปลงข้อมูลเผื่อส่งมาเป็น String
                     if (typeof data === 'string') {
-                        try { data = JSON.parse(data); } catch(err) {}
+                        try { data = JSON.parse(data); } catch(err) { return; }
                     }
-                    if (!data || typeof data !== 'object') return;
+                    if (typeof data !== 'object') return;
 
-                    // ขั้นที่ 2: แกะกล่องชั้นใน (VDO.Ninja ชอบซ่อนข้อความไว้ใน data.data ที่เป็น String อีกที)
-                    if (data.data && typeof data.data === 'string') {
-                        try { data.data = JSON.parse(data.data); } catch(err) {}
+                    // 2. ข้ามข้อมูลสถิติที่วิ่งรัวๆ เพื่อกันระบบรวน
+                    let action = String(data.action || data.type || "").toLowerCase();
+                    if (action === 'stats' || action === 'mic-volume' || action === 'video-bitrate') return;
+
+                    let rawMsg = null;
+
+                    // 3. ดึงข้อความดิบๆ ออกมา (พุ่งเป้าไปที่ data.gotchat.msg ตามรูปภาพที่คุณแคปมาให้)
+                    if (data.gotchat && data.gotchat.msg) {
+                        rawMsg = data.gotchat.msg;
+                    } 
+                    // เผื่อมันซ่อนอยู่ใน data.data อีกชั้น
+                    else if (data.data && typeof data.data === 'object' && data.data.gotchat && data.data.gotchat.msg) {
+                        rawMsg = data.data.gotchat.msg;
                     }
-
-                    // สร้างตัวแปร payload เพื่อใช้อ่านค่าง่ายๆ
-                    let payload = (data.data && typeof data.data === 'object') ? data.data : data;
-
-                    // ข้ามข้อมูลสถิติที่วิ่งรัวๆ เพื่อประหยัดแบตเตอรี่
-                    let actionStr = String(payload.action || payload.type || "").toLowerCase();
-                    if (actionStr === 'stats' || actionStr === 'mic-volume' || actionStr === 'video-bitrate') return;
-
-                    let txt = "";
-
-                    // ค้นหาข้อความ (ตามรูปที่คุณส่งมา มันจะอยู่ใน payload.gotchat.msg)
-                    if (payload.gotchat && payload.gotchat.msg) {
-                        txt = payload.gotchat.msg;
-                    } else if (actionStr.includes('chat') || actionStr.includes('msg')) {
-                        txt = payload.msg || payload.message || payload.text || payload.chat;
+                    // เผื่อมันมาเป็นมาตรฐาน action="chat"
+                    else if (action.includes('chat') || action.includes('msg')) {
+                        rawMsg = data.msg || data.message || data.value || data.text || data.chat;
                     }
 
-                    // ถ้าดึงข้อความมาได้แล้ว...
-                    if (txt && typeof txt === 'string') {
-                        let cleanTxt = txt;
-                        
-                        // หั่นทิ้งตั้งแต่เริ่ม Tag <span หรือ <br> หรือ <b><i ที่ Ninja ชอบใส่ชื่อคนส่งมาด้วย
-                        // (นี่คือตัวการที่ทำให้มันขึ้นโค้ดประหลาดในรูปก่อนหน้านี้)
-                        cleanTxt = cleanTxt.split(/<span/i)[0];
-                        cleanTxt = cleanTxt.split(/<b><i/i)[0];
-                        cleanTxt = cleanTxt.split(/<br\s*\/?>/i)[0];
-                        
-                        // ถอด Tag ทั้งหมดออกอีกชั้นเพื่อความชัวร์ จะได้เหลือแค่ "555" เพียวๆ
-                        cleanTxt = cleanTxt.replace(/<[^>]*>?/gm, '').trim();
+                    // 4. สกัดเอาเฉพาะข้อความที่เราต้องการ!
+                    if (rawMsg && typeof rawMsg === 'string') {
+                        // VDO.Ninja มักจะต่อท้ายด้วย "5555 <b><i><span class='chat_director..."
+                        // วิธีแก้ที่ชัวร์ที่สุด: หั่นทิ้งตั้งแต่เจอเครื่องหมาย '<' ตัวแรกไปเลย!
+                        let cleanTxt = rawMsg.split('<')[0].trim();
 
+                        // ถ้าเผลอพิมพ์ < มาตั้งแต่ตัวแรก ให้ล้างด้วยวิธีลบ Tag HTML
+                        if (cleanTxt === "") {
+                            cleanTxt = rawMsg.replace(/<[^>]*>?/gm, '').trim();
+                        }
+
+                        // ถ้าได้ข้อความมาแล้ว ให้โชว์เลย!
                         if (cleanTxt !== "") {
                             showToast(cleanTxt);
                         }
                     }
                 } catch(error) {
-                    console.error("Chat parsing error:", error);
+                    console.error("เกิดข้อผิดพลาดในการอ่านข้อความ: ", error);
                 }
             });
         }
@@ -237,15 +235,12 @@
             msgText.innerText = textToShow;
             toast.style.display = 'block';
             
-            // รีเซ็ตแอนิเมชันให้เด้งใหม่ทุกครั้ง
             toast.style.animation = 'none';
             toast.offsetHeight; 
             toast.style.animation = 'slideDown 0.3s';
             
-            // ยกเลิกเวลานับถอยหลังของเก่า (ถ้ามีข้อความส่งมาติดๆ กัน กล่องจะได้ไม่หายไปก่อน)
             if(toastTimeout) clearTimeout(toastTimeout);
             
-            // ตั้งเวลาซ่อนอัตโนมัติ 10 วินาที
             toastTimeout = setTimeout(() => { toast.style.display = 'none'; }, 10000);
         }
 
