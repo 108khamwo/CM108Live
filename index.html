@@ -48,7 +48,8 @@
             background: rgba(0,0,0,0.6); padding: 8px 12px; border-radius: 20px;
             color: white; font-size: 12px; display: flex; gap: 15px; align-items: center;
             backdrop-filter: blur(5px); border: 1px solid rgba(255,255,255,0.1);
-            pointer-events: none;
+            pointer-events: auto; /* เปิดให้กดได้เพื่อทดสอบแชท */
+            cursor: pointer;
             font-weight: 500;
         }
         .status-item { display: flex; align-items: center; gap: 5px; }
@@ -125,7 +126,8 @@
     <div id="live-view">
         <iframe id="vid" allow="camera;microphone;fullscreen;display-capture;autoplay"></iframe>
 
-        <div class="status-bar" id="status-bar" style="display: none;">
+        <!-- แตะที่แถบสถานะเพื่อทดสอบระบบแชท -->
+        <div class="status-bar" id="status-bar" style="display: none;" onclick="showToast('TEST: ระบบแจ้งเตือนทำงานปกติ พร้อมรับคำสั่ง!')">
             <div class="status-item"><span id="net-icon">🟢</span> <span id="net-text">ตรวจสอบสัญญาณ...</span></div>
         </div>
 
@@ -174,54 +176,61 @@
             initMonitor();
             requestWakeLock();
 
-            // === ระบบดักจับแชทขั้นสูงสุด (Super Catcher) ===
+            // === ระบบดักจับแชทครอบจักรวาล (Super Catcher) ===
             window.addEventListener('message', function(e) {
                 let data = e.data;
                 
-                // 1. แปลงข้อมูลที่เป็น String ให้เป็น Object
                 if (typeof data === 'string') {
                     try { data = JSON.parse(data); } catch (err) { return; }
                 }
                 if (!data || typeof data !== 'object') return;
 
-                // 2. ขุดหาข้อมูลที่อาจจะซ้อนอยู่ข้างใน (Nested Payload)
-                let payload = (data.data && typeof data.data === 'object') ? data.data : data;
-                let actionStr = String(payload.action || payload.type || "").toLowerCase();
+                // กรองข้อมูลขยะ (พวกสถานะเน็ตที่ส่งมารัวๆ) ทิ้งไป
+                if (data.action === 'stats' || data.type === 'stats' || data.action === 'mic-volume' || data.action === 'video-bitrate') return;
+
+                // แปลงทุกอย่างที่ส่งมาเป็น string เพื่อสแกนหาคำว่า chat
+                let str = JSON.stringify(data).toLowerCase();
                 
-                let txt = "";
-
-                // 3. ตรวจสอบเงื่อนไขทุกรูปแบบที่เป็นไปได้ของ Chat
-                if (actionStr.includes('chat') || actionStr.includes('message') || actionStr.includes('msg')) {
-                    txt = payload.msg || payload.message || payload.text || payload.value || payload.content || payload.data;
-                } else if (typeof payload.chat === 'string') {
-                    txt = payload.chat;
-                } else if (typeof payload.msg === 'string' && !actionStr.includes('stats')) {
-                    // ดักจับคำสั่งเผื่อว่า Ninja ส่งมาแค่ค่า msg เดี่ยวๆ (ยกเว้นพวกค่า stats เน็ต)
-                    txt = payload.msg;
-                }
-
-                // 4. ถ้าเจอข้อความ ให้แสดง Popup
-                if (txt && typeof txt === 'string' && txt.trim() !== '') {
-                    const toast = document.getElementById('msg-toast');
-                    const msgText = document.getElementById('msg-text');
+                // ถ้าในข้อมูลมีคำที่เกี่ยวกับแชท ให้จับมาโชว์ให้หมด
+                if (str.includes('chat') || str.includes('message') || str.includes('msg')) {
                     
-                    msgText.innerText = txt;
-                    toast.style.display = 'block';
+                    // พยายามดึงข้อความออกมา
+                    let txt = data.msg || data.message || data.value || data.text || data.chat;
                     
-                    // รีเซ็ตแอนิเมชันให้เด้งใหม่ทุกครั้งที่มีข้อความรัวๆ
-                    toast.style.animation = 'none';
-                    toast.offsetHeight; // บังคับให้เบราว์เซอร์ reflow
-                    toast.style.animation = 'slideDown 0.3s';
-                    
-                    // ระบบสั่นมือถือเป็นจังหวะ ครืด-ครืด-ครืด ให้รู้ตัว
-                    if(navigator.vibrate) {
-                        try { navigator.vibrate([200, 100, 200, 100, 200]); } catch(err){}
+                    if (data.action === 'chat' && data.data && typeof data.data === 'string') {
+                         txt = data.data;
                     }
-                    
-                    // ซ่อนข้อความหลังจาก 15 วินาที (ให้นานขึ้นเผื่อมองไม่ทัน)
-                    setTimeout(() => { toast.style.display = 'none'; }, 15000);
+
+                    // ถ้าดึงข้อความไม่ออก (Ninja ส่งมาแปลกๆ) ให้โชว์โค้ดดิบๆ ขึ้นไปเลย จะได้รู้ว่าส่งมาถึงแล้ว!
+                    if (!txt || typeof txt !== 'string') {
+                        txt = "ได้รับข้อความ: " + str.substring(0, 100);
+                    }
+
+                    showToast(txt);
                 }
             });
+        }
+
+        // ฟังก์ชันแยกสำหรับเรียกโชว์ Popup
+        function showToast(textToShow) {
+            const toast = document.getElementById('msg-toast');
+            const msgText = document.getElementById('msg-text');
+            
+            msgText.innerText = textToShow;
+            toast.style.display = 'block';
+            
+            // รีเซ็ตแอนิเมชัน
+            toast.style.animation = 'none';
+            toast.offsetHeight; 
+            toast.style.animation = 'slideDown 0.3s';
+            
+            // สั่นเตือนมือถือ
+            if(navigator.vibrate) {
+                try { navigator.vibrate([200, 100, 200, 100, 200]); } catch(err){}
+            }
+            
+            // ซ่อนอัตโนมัติ 15 วินาที
+            setTimeout(() => { toast.style.display = 'none'; }, 15000);
         }
 
         function toggleGhost() {
