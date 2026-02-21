@@ -3,7 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <!-- เพิ่ม Meta Tags สำหรับ iOS เพื่อให้แสดงผลเต็มจอเมื่อ Add to Home Screen -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="CM108 Live">
@@ -49,7 +48,7 @@
             background: rgba(0,0,0,0.6); padding: 8px 12px; border-radius: 20px;
             color: white; font-size: 12px; display: flex; gap: 15px; align-items: center;
             backdrop-filter: blur(5px); border: 1px solid rgba(255,255,255,0.1);
-            pointer-events: none; /* กดทะลุได้ ไม่บังปุ่ม */
+            pointer-events: none;
             font-weight: 500;
         }
         .status-item { display: flex; align-items: center; gap: 5px; }
@@ -94,7 +93,6 @@
 </head>
 <body>
 
-    <!-- หน้าแรก เลือกค่าต่างๆ -->
     <div id="lobby">
         <h1>CM108 LIVE</h1>
         
@@ -124,32 +122,25 @@
         </p>
     </div>
 
-    <!-- หน้าจอ Live (Ninja) -->
     <div id="live-view">
         <iframe id="vid" allow="camera;microphone;fullscreen;display-capture;autoplay"></iframe>
 
-        <!-- แถบแสดงสถานะ (เน็ต) -->
         <div class="status-bar" id="status-bar" style="display: none;">
-            <div class="status-item">
-                <span id="net-icon">🟢</span> <span id="net-text">ตรวจสอบสัญญาณ...</span>
-            </div>
+            <div class="status-item"><span id="net-icon">🟢</span> <span id="net-text">ตรวจสอบสัญญาณ...</span></div>
         </div>
 
-        <!-- แถบปุ่มลอยด้านขวา -->
         <div class="side-ctrl">
             <button class="btn-act" onclick="toggleFullScreen()" title="เต็มจอ">⛶</button>
             <button class="btn-act" onclick="toggleGhost()" title="พักหน้าจอ">🌙</button>
             <button class="btn-act btn-home" onclick="location.reload()" title="กลับหน้าแรก">HOME</button>
         </div>
 
-        <!-- กล่องข้อความแจ้งเตือนจากศูนย์ -->
         <div id="msg-toast">
             <div style="font-size:10px; color:#aaa; margin-bottom:5px;">คำสั่งจากศูนย์ (MCR):</div>
             <span id="msg-text" style="font-size:20px; font-weight:bold;">--</span>
         </div>
     </div>
 
-    <!-- โหมดพักหน้าจอ -->
     <div id="ghost" onclick="toggleGhost()">
         <div style="font-size:50px; margin-bottom:15px;">🎥</div>
         <h2 style="color:#fff; margin:0;">พักหน้าจอ</h2>
@@ -179,49 +170,56 @@
             document.getElementById('lobby').style.display = 'none';
             document.getElementById('live-view').style.display = 'block';
             
-            // เปิดแสดงแถบสถานะ และเปิดระบบป้องกันจอดับ
             document.getElementById('status-bar').style.display = 'flex';
             initMonitor();
             requestWakeLock();
 
-            // === ปรับปรุงระบบดักจับข้อความแชทขั้นสูง ===
+            // === ระบบดักจับแชทขั้นสูงสุด (Super Catcher) ===
             window.addEventListener('message', function(e) {
                 let data = e.data;
                 
-                // ถ้าระบบส่งมาเป็น String (ข้อความดิบ) ให้แปลงเป็น Object ก่อน
+                // 1. แปลงข้อมูลที่เป็น String ให้เป็น Object
                 if (typeof data === 'string') {
-                    try { 
-                        data = JSON.parse(data); 
-                    } catch (err) { 
-                        return; // ถ้าไม่ใช่ JSON ข้ามไปเลย
-                    }
+                    try { data = JSON.parse(data); } catch (err) { return; }
                 }
+                if (!data || typeof data !== 'object') return;
+
+                // 2. ขุดหาข้อมูลที่อาจจะซ้อนอยู่ข้างใน (Nested Payload)
+                let payload = (data.data && typeof data.data === 'object') ? data.data : data;
+                let actionStr = String(payload.action || payload.type || "").toLowerCase();
                 
-                if (!data) return;
-
-                // ตรวจสอบโครงสร้างข้อความหลายๆ รูปแบบที่ VDO.Ninja อาจจะส่งมา
                 let txt = "";
-                if (data.action === 'chat' || data.type === 'chat') {
-                    txt = data.value || data.msg || data.content || data.text;
-                } else if (data.chat) {
-                    txt = data.chat;
-                } else if (data.msg === 'chat') {
-                    txt = data.value || data.content;
+
+                // 3. ตรวจสอบเงื่อนไขทุกรูปแบบที่เป็นไปได้ของ Chat
+                if (actionStr.includes('chat') || actionStr.includes('message') || actionStr.includes('msg')) {
+                    txt = payload.msg || payload.message || payload.text || payload.value || payload.content || payload.data;
+                } else if (typeof payload.chat === 'string') {
+                    txt = payload.chat;
+                } else if (typeof payload.msg === 'string' && !actionStr.includes('stats')) {
+                    // ดักจับคำสั่งเผื่อว่า Ninja ส่งมาแค่ค่า msg เดี่ยวๆ (ยกเว้นพวกค่า stats เน็ต)
+                    txt = payload.msg;
                 }
 
-                // ถ้าเจอข้อความแชท ให้โชว์ขึ้นมาทันที
-                if (txt) {
+                // 4. ถ้าเจอข้อความ ให้แสดง Popup
+                if (txt && typeof txt === 'string' && txt.trim() !== '') {
                     const toast = document.getElementById('msg-toast');
-                    document.getElementById('msg-text').innerText = txt;
+                    const msgText = document.getElementById('msg-text');
+                    
+                    msgText.innerText = txt;
                     toast.style.display = 'block';
                     
-                    // สั่นเตือนมือถือ (ทำงานได้ดีบน Android)
+                    // รีเซ็ตแอนิเมชันให้เด้งใหม่ทุกครั้งที่มีข้อความรัวๆ
+                    toast.style.animation = 'none';
+                    toast.offsetHeight; // บังคับให้เบราว์เซอร์ reflow
+                    toast.style.animation = 'slideDown 0.3s';
+                    
+                    // ระบบสั่นมือถือเป็นจังหวะ ครืด-ครืด-ครืด ให้รู้ตัว
                     if(navigator.vibrate) {
-                        try { navigator.vibrate([200, 100, 200]); } catch(e){}
+                        try { navigator.vibrate([200, 100, 200, 100, 200]); } catch(err){}
                     }
                     
-                    // เคลียร์และซ่อนหลังผ่านไป 10 วินาที
-                    setTimeout(() => { toast.style.display = 'none'; }, 10000);
+                    // ซ่อนข้อความหลังจาก 15 วินาที (ให้นานขึ้นเผื่อมองไม่ทัน)
+                    setTimeout(() => { toast.style.display = 'none'; }, 15000);
                 }
             });
         }
@@ -231,7 +229,6 @@
             g.style.display = (g.style.display === 'flex') ? 'none' : 'flex';
         }
 
-        // ระบบเต็มจอ (Fullscreen)
         function toggleFullScreen() {
             const doc = window.document;
             const docEl = doc.documentElement;
@@ -254,17 +251,13 @@
             }
         }
 
-        // ระบบป้องกันหน้าจอดับ (Wake Lock)
         let wakeLock = null;
         async function requestWakeLock() {
             try {
                 if ('wakeLock' in navigator) {
                     wakeLock = await navigator.wakeLock.request('screen');
-                    console.log('ระบบป้องกันจอดับทำงานแล้ว');
                 }
-            } catch (err) {
-                console.log(`Wake Lock Error: ${err.message}`);
-            }
+            } catch (err) {}
         }
 
         document.addEventListener('visibilitychange', () => {
@@ -273,7 +266,6 @@
             }
         });
 
-        // ระบบตรวจสอบสถานะเน็ต
         function initMonitor() {
             function updateNetwork() {
                 const netText = document.getElementById('net-text');
@@ -281,10 +273,9 @@
                 
                 if (navigator.onLine) {
                     if (navigator.connection) {
-                        const type = navigator.connection.effectiveType; // '4g', '3g', '2g'
+                        const type = navigator.connection.effectiveType; 
                         const dl = navigator.connection.downlink || 0;
                         
-                        // วิเคราะห์คุณภาพและแปลงเป็นคำที่เข้าใจง่าย
                         if (type === '4g' || dl >= 3) {
                             netText.innerText = 'สัญญาณดีเยี่ยม (เน็ตแรง)';
                             netText.className = 'text-good';
