@@ -173,55 +173,59 @@
             initMonitor();
             requestWakeLock();
 
-            // === ระบบดักจับและกรองข้อความ (V. Bulletproof ตัดจบที่ '<') ===
+            // === ระบบดักจับแชทขั้นสุดยอด (Recursive Deep Search) ===
             window.addEventListener('message', function(e) {
+                if (!e.data) return;
+
+                // กรองข้อมูลสถิติที่วิ่งรัวๆ ทิ้งไปก่อนเพื่อไม่ให้เครื่องหน่วง
+                let rawStr = typeof e.data === 'string' ? e.data : JSON.stringify(e.data);
+                if (rawStr.includes('"stats"') || rawStr.includes('"video-bitrate"')) return;
+                
+                // ฟังก์ชันขุดหาข้อความ ไม่ว่าจะซ่อนลึกแค่ไหน หรือโดนแปลงเป็น String ซ้อนกัน
+                function extractMsg(item) {
+                    if (typeof item === 'string') {
+                        // ถ้าเจอ String ที่หน้าตาเหมือนกล่องข้อมูล ให้แกะมันออก
+                        if (item.trim().startsWith('{')) {
+                            try { item = JSON.parse(item); } catch(err) { return null; }
+                        } else {
+                            return null;
+                        }
+                    }
+                    if (typeof item !== 'object' || item === null) return null;
+
+                    // ถ้าเจอเป้าหมาย ให้ดึงข้อความออกมาทันที
+                    if (item.gotchat && item.gotchat.msg) return item.gotchat.msg;
+                    if (item.chat && typeof item.chat === 'string') return item.chat;
+                    if (item.msg && typeof item.msg === 'string') return item.msg;
+                    if (item.message && typeof item.message === 'string') return item.message;
+
+                    // วนลูปขุดหาในชั้นที่ลึกลงไปเรื่อยๆ (นี่คือทีเด็ดที่แก้ปัญหาซ่อนข้อมูล)
+                    for (let key in item) {
+                        let res = extractMsg(item[key]);
+                        if (res) return res;
+                    }
+                    return null;
+                }
+
                 try {
-                    let data = e.data;
-                    if (!data) return;
+                    // เรียกใช้งานฟังก์ชันขุดหาข้อความ
+                    let rawMsg = extractMsg(e.data);
 
-                    // 1. ลองแปลงข้อมูลเผื่อส่งมาเป็น String
-                    if (typeof data === 'string') {
-                        try { data = JSON.parse(data); } catch(err) { return; }
-                    }
-                    if (typeof data !== 'object') return;
-
-                    // 2. ข้ามข้อมูลสถิติที่วิ่งรัวๆ เพื่อกันระบบรวน
-                    let action = String(data.action || data.type || "").toLowerCase();
-                    if (action === 'stats' || action === 'mic-volume' || action === 'video-bitrate') return;
-
-                    let rawMsg = null;
-
-                    // 3. ดึงข้อความดิบๆ ออกมา (พุ่งเป้าไปที่ data.gotchat.msg ตามรูปภาพที่คุณแคปมาให้)
-                    if (data.gotchat && data.gotchat.msg) {
-                        rawMsg = data.gotchat.msg;
-                    } 
-                    // เผื่อมันซ่อนอยู่ใน data.data อีกชั้น
-                    else if (data.data && typeof data.data === 'object' && data.data.gotchat && data.data.gotchat.msg) {
-                        rawMsg = data.data.gotchat.msg;
-                    }
-                    // เผื่อมันมาเป็นมาตรฐาน action="chat"
-                    else if (action.includes('chat') || action.includes('msg')) {
-                        rawMsg = data.msg || data.message || data.value || data.text || data.chat;
-                    }
-
-                    // 4. สกัดเอาเฉพาะข้อความที่เราต้องการ!
                     if (rawMsg && typeof rawMsg === 'string') {
-                        // VDO.Ninja มักจะต่อท้ายด้วย "5555 <b><i><span class='chat_director..."
-                        // วิธีแก้ที่ชัวร์ที่สุด: หั่นทิ้งตั้งแต่เจอเครื่องหมาย '<' ตัวแรกไปเลย!
+                        // หั่น HTML Tags ของ Ninja ทิ้งให้เหลือแต่ข้อความเพียวๆ
                         let cleanTxt = rawMsg.split('<')[0].trim();
 
-                        // ถ้าเผลอพิมพ์ < มาตั้งแต่ตัวแรก ให้ล้างด้วยวิธีลบ Tag HTML
                         if (cleanTxt === "") {
                             cleanTxt = rawMsg.replace(/<[^>]*>?/gm, '').trim();
                         }
 
-                        // ถ้าได้ข้อความมาแล้ว ให้โชว์เลย!
+                        // ถ้าได้ข้อความมาแล้ว โชว์ขึ้นจอเลย!
                         if (cleanTxt !== "") {
                             showToast(cleanTxt);
                         }
                     }
                 } catch(error) {
-                    console.error("เกิดข้อผิดพลาดในการอ่านข้อความ: ", error);
+                    console.error("Chat parsing error:", error);
                 }
             });
         }
