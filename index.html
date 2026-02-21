@@ -121,6 +121,7 @@
 
         <!-- แถบปุ่มลอยด้านขวา -->
         <div class="side-ctrl">
+            <button class="btn-act" onclick="toggleFullScreen()" title="เต็มจอ">⛶</button>
             <button class="btn-act" onclick="toggleGhost()" title="พักหน้าจอ">🌙</button>
             <button class="btn-act btn-home" onclick="location.reload()" title="กลับหน้าแรก">HOME</button>
         </div>
@@ -156,15 +157,49 @@
             document.getElementById('lobby').style.display = 'none';
             document.getElementById('live-view').style.display = 'block';
             
-            // เปิดแสดงแถบสถานะ
+            // เปิดแสดงแถบสถานะ และเปิดระบบป้องกันจอดับ
             document.getElementById('status-bar').style.display = 'flex';
             initMonitor();
+            requestWakeLock();
         }
 
         function toggleGhost() {
             let g = document.getElementById('ghost');
             g.style.display = (g.style.display === 'flex') ? 'none' : 'flex';
         }
+
+        // ระบบเต็มจอ (Fullscreen)
+        function toggleFullScreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(err => {
+                    console.log(`ไม่สามารถเปิดโหมดเต็มจอได้: ${err.message}`);
+                });
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                }
+            }
+        }
+
+        // ระบบป้องกันหน้าจอดับ (Wake Lock)
+        let wakeLock = null;
+        async function requestWakeLock() {
+            try {
+                if ('wakeLock' in navigator) {
+                    wakeLock = await navigator.wakeLock.request('screen');
+                    console.log('ระบบป้องกันจอดับทำงานแล้ว');
+                }
+            } catch (err) {
+                console.log(`Wake Lock Error: ${err.message}`);
+            }
+        }
+
+        // ขอ Wake Lock ใหม่เมื่อผู้ใช้สลับแอปแล้วกลับมาที่หน้าเว็บ
+        document.addEventListener('visibilitychange', () => {
+            if (wakeLock !== null && document.visibilityState === 'visible') {
+                requestWakeLock();
+            }
+        });
 
         // ระบบตรวจสอบสถานะเน็ต
         function initMonitor() {
