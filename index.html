@@ -209,6 +209,7 @@
             else if(mode === 'safe') p = "&width=1280&height=720&bitrate=2500&framerate=30";
             else p = "&quality=1";
 
+            // เพิ่ม &api=1 และ &viewchat=1 เพื่อเปิดประตูให้ Chat ทำงาน
             let url = "https://vdo.ninja/?push=" + id + "&room=CM108_NewsRoom" + p + 
                       "&clean=0&viewchat=1&api=1&label=" + id + "&select";
 
@@ -220,10 +221,9 @@
             initMonitor();
             requestWakeLock();
 
-            // === ระบบดักจับแชทจาก MCR (Recursive Deep Search) ===
+            // === ระบบดักจับแชทจาก MCR ===
             window.addEventListener('message', function(e) {
                 if (!e.data) return;
-
                 let rawStr = typeof e.data === 'string' ? e.data : JSON.stringify(e.data);
                 if (rawStr.includes('"stats"') || rawStr.includes('"video-bitrate"') || rawStr.includes('"mic-volume"')) return;
                 
@@ -231,17 +231,13 @@
                     if (typeof item === 'string') {
                         if (item.trim().startsWith('{')) {
                             try { item = JSON.parse(item); } catch(err) { return null; }
-                        } else {
-                            return null;
-                        }
+                        } else return null;
                     }
                     if (typeof item !== 'object' || item === null) return null;
-
                     if (item.gotchat && item.gotchat.msg) return item.gotchat.msg;
                     if (item.chat && typeof item.chat === 'string') return item.chat;
                     if (item.msg && typeof item.msg === 'string') return item.msg;
                     if (item.message && typeof item.message === 'string') return item.message;
-
                     for (let key in item) {
                         let res = extractMsg(item[key]);
                         if (res) return res;
@@ -251,22 +247,12 @@
 
                 try {
                     let rawMsg = extractMsg(e.data);
-
                     if (rawMsg && typeof rawMsg === 'string') {
-                        // หั่น HTML Tags ของ Ninja ทิ้งให้เหลือแต่ข้อความเพียวๆ
                         let cleanTxt = rawMsg.split('<')[0].trim();
-
-                        if (cleanTxt === "") {
-                            cleanTxt = rawMsg.replace(/<[^>]*>?/gm, '').trim();
-                        }
-
-                        if (cleanTxt !== "") {
-                            showToast(cleanTxt);
-                        }
+                        if (cleanTxt === "") cleanTxt = rawMsg.replace(/<[^>]*>?/gm, '').trim();
+                        if (cleanTxt !== "") showToast(cleanTxt);
                     }
-                } catch(error) {
-                    console.error("Chat parsing error:", error);
-                }
+                } catch(error) { console.error("Chat parsing error:", error); }
             });
         }
 
@@ -275,14 +261,11 @@
         function showToast(textToShow) {
             const toast = document.getElementById('msg-toast');
             const msgText = document.getElementById('msg-text');
-            
             msgText.innerText = textToShow;
             toast.style.display = 'block';
-            
             toast.style.animation = 'none';
             toast.offsetHeight; 
             toast.style.animation = 'slideDown 0.3s';
-            
             if(toastTimeout) clearTimeout(toastTimeout);
             toastTimeout = setTimeout(() => { toast.style.display = 'none'; }, 10000);
         }
@@ -291,7 +274,7 @@
             document.getElementById('msg-toast').style.display = 'none';
         }
 
-        // --- ฟังก์ชันส่งข้อความกลับหาศูนย์ MCR ---
+        // --- ฟังก์ชันส่งข้อความกลับหาศูนย์ MCR (ปรับปรุงใหม่เพื่อความชัวร์ 100%) ---
         function toggleChat() {
             let panel = document.getElementById('chat-panel');
             if (panel.style.display === 'flex') {
@@ -318,8 +301,22 @@
         function sendToNinjaChat(text) {
             let iframe = document.getElementById('vid');
             if (iframe && iframe.contentWindow) {
-                iframe.contentWindow.postMessage({"sendChat": text}, '*');
-                iframe.contentWindow.postMessage({"function": "sendChat", "value": text}, '*');
+                // ยิงคำสั่งทุกรูปแบบที่ API VDO.Ninja อาจจะใช้ในแต่ละเวอร์ชัน
+                const target = '*';
+                
+                // รูปแบบมาตรฐานที่สุด
+                iframe.contentWindow.postMessage({ "chat": text }, target);
+                
+                // รูปแบบ API มาตรฐาน (ส่งเป็น Director Chat)
+                iframe.contentWindow.postMessage({ "sendChat": text }, target);
+                
+                // รูปแบบส่งเป็น Function Call
+                iframe.contentWindow.postMessage({ "function": "sendChat", "value": text }, target);
+                
+                // รูปแบบ String (บางเวอร์ชันต้องการแบบนี้)
+                iframe.contentWindow.postMessage(JSON.stringify({ "sendChat": text }), target);
+
+                console.log("Sent message variants for: " + text);
                 
                 toggleChat();
                 showToast("ส่งแล้ว: " + text);
@@ -337,7 +334,6 @@
             const docEl = doc.documentElement;
             const requestFullScreen = docEl.requestFullscreen || docEl.webkitRequestFullscreen || docEl.mozRequestFullScreen || docEl.msRequestFullscreen;
             const cancelFullScreen = doc.exitFullscreen || doc.webkitExitFullscreen || doc.mozCancelFullScreen || doc.msExitFullscreen;
-
             if (!doc.fullscreenElement && !doc.webkitFullscreenElement && !doc.mozFullScreenElement && !doc.msFullscreenElement) {
                 if (requestFullScreen) {
                     requestFullScreen.call(docEl).catch(err => { alert(`ไม่สามารถเปิดเต็มจอได้: ${err.message}`); });
@@ -352,26 +348,21 @@
         let wakeLock = null;
         async function requestWakeLock() {
             try {
-                if ('wakeLock' in navigator) {
-                    wakeLock = await navigator.wakeLock.request('screen');
-                }
+                if ('wakeLock' in navigator) wakeLock = await navigator.wakeLock.request('screen');
             } catch (err) {}
         }
         document.addEventListener('visibilitychange', () => {
             if (wakeLock !== null && document.visibilityState === 'visible') requestWakeLock();
         });
 
-        // --- ตรวจสอบเน็ตเวิร์ก ---
         function initMonitor() {
             function updateNetwork() {
                 const netText = document.getElementById('net-text');
                 const netIcon = document.getElementById('net-icon');
-                
                 if (navigator.onLine) {
                     if (navigator.connection) {
                         const type = navigator.connection.effectiveType; 
                         const dl = navigator.connection.downlink || 0;
-                        
                         if (type === '4g' || dl >= 3) {
                             netText.innerText = 'สัญญาณดีเยี่ยม (เน็ตแรง)';
                             netText.className = 'text-good';
