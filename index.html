@@ -164,7 +164,7 @@
         </div>
     </div>
 
-    <!-- Popup Toast (ย้ายมาไว้ข้างนอกเพื่อให้ z-index ทำงานเต็มที่) -->
+    <!-- Popup Toast -->
     <div id="msg-toast">
         <button class="toast-close" onclick="closeToast()">✕</button>
         <div style="font-size:11px; color:var(--success); margin-bottom:10px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px;">📥 ศูนย์ MCR แจ้งว่า:</div>
@@ -203,6 +203,24 @@
         let mode = 'hq';
         let currentCam = "";
 
+        // ฟังก์ชันช่วยทำความสะอาดข้อความ
+        function stripHTML(html) {
+            if (!html) return "";
+            if (typeof html !== 'string') html = String(html);
+            return html.replace(/<[^>]*>?/gm, '').replace(/:\s*$/, '').trim();
+        }
+
+        // ฟังก์ชันกรองขยะระบบ (ตัวเลขความละเอียด, UUID)
+        function isSystemTrash(str) {
+            if (!str) return true;
+            const s = String(str).trim();
+            if (/[\u0E00-\u0E7F]/.test(s)) return false; 
+            if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s)) return true; 
+            if (/^-?\d+\.\d+$/.test(s)) return true; 
+            if (s === "[object Object]") return true;
+            return false;
+        }
+
         function setMode(m) {
             mode = m;
             document.querySelectorAll('.m-btn').forEach(b => b.classList.remove('active'));
@@ -226,34 +244,53 @@
             
             requestWakeLock();
             
-            // === ระบบรับข้อความแบบใหม่ (Simplified Listener) ===
+            // === นำโค้ดรับข้อความที่สมบูรณ์ที่สุดกลับมา 100% ===
             window.addEventListener('message', function(e) {
+                if (!e.data) return;
                 let data = e.data;
-                if (!data) return;
-
-                // ตรวจสอบทั้งแบบ Object และ JSON String
-                if (typeof data === 'string' && data.startsWith('{')) {
+                
+                if (typeof data === 'string' && data.trim().startsWith('{')) {
                     try { data = JSON.parse(data); } catch(err) { return; }
                 }
 
-                let chatText = "";
+                const action = (data.action || data.type || "").toLowerCase();
+                const ignoreActions = ['stats', 'mic_volume', 'video_bitrate', 'variable', 'room_info', 'stream_update'];
+                if (ignoreActions.includes(action)) return;
 
-                // ตรวจสอบคีย์ที่ VDO.Ninja ส่งมาให้ Guest
-                if (data.action === "gotchat" && data.msg) {
-                    chatText = data.msg;
-                } else if (data.gotchat && data.gotchat.msg) {
-                    chatText = data.gotchat.msg;
-                } else if (data.msg && typeof data.msg === 'string') {
-                    chatText = data.msg;
-                } else if (data.chat && typeof data.chat === 'string') {
-                    chatText = data.chat;
+                let fMsg = null;
+
+                function findChat(obj) {
+                    if (!obj || typeof obj !== 'object') return false;
+                    let p = null;
+                    if (obj.gotchat && obj.gotchat.msg) p = obj.gotchat.msg;
+                    else if (obj.msg && typeof obj.msg === 'string') p = obj.msg;
+                    else if (obj.chat && typeof obj.chat === 'string') p = obj.chat;
+                    else if (obj.text && typeof obj.text === 'string') p = obj.text;
+                    else if (typeof obj.msg === 'number') p = String(obj.msg);
+                    else if (typeof obj.chat === 'number') p = String(obj.chat);
+
+                    if (p !== null) {
+                        fMsg = String(p);
+                        return true;
+                    }
+                    for (let k in obj) {
+                        if (obj[k] && typeof obj[k] === 'object' && k !== 'data') {
+                            if (findChat(obj[k])) return true;
+                        }
+                    }
+                    if (obj.data && typeof obj.data === 'object') {
+                        if (findChat(obj.data)) return true;
+                    }
+                    return false;
                 }
 
-                if (chatText && chatText !== "[object Object]") {
-                    let clean = chatText.replace(/<[^>]*>?/gm, '').trim();
-                    if (clean !== "") {
-                        showToast(clean);
-                        addHistory(clean, "ศูนย์ MCR", false);
+                findChat(data);
+
+                if (fMsg) {
+                    let cleanMsg = stripHTML(fMsg);
+                    if (cleanMsg !== "" && !isSystemTrash(cleanMsg)) {
+                        showToast(cleanMsg);
+                        addHistory(cleanMsg, "ศูนย์ MCR", false);
                     }
                 }
             });
@@ -262,7 +299,6 @@
         function sendToNinjaChat(text) {
             const iframe = document.getElementById('vid');
             if (!iframe || !iframe.contentWindow) return;
-            // ส่งข้อความแบบหว่านแหเพื่อให้เข้าทุกระบบของ Ninja
             iframe.contentWindow.postMessage({ "action": "sendChat", "value": text }, '*');
             iframe.contentWindow.postMessage({ "sendChat": text }, '*');
             addHistory(text, "เรา (สนาม)", true);
@@ -281,6 +317,9 @@
         function addHistory(msg, sender, isMe) {
             const list = document.getElementById('history-list');
             const time = new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
+            
+            if (list.innerText.includes("ยังไม่มีประวัติ")) list.innerHTML = "";
+            
             const div = document.createElement('div');
             div.className = `h-item ${isMe ? 'h-from-me' : 'h-from-mcr'}`;
             div.innerHTML = `<div class="h-meta">${sender} • ${time}</div><div class="h-msg">${msg}</div>`;
@@ -307,9 +346,8 @@
             const m = document.getElementById('msg-text');
             m.innerText = txt;
             
-            // Force Redraw สำหรับมือถือ
             t.style.display = 'none';
-            void t.offsetWidth; // trigger reflow
+            void t.offsetWidth;
             t.style.display = 'block';
             
             if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
