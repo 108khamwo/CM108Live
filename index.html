@@ -48,91 +48,91 @@
         #live-view { display: none; position: fixed; inset: 0; background: #000; z-index: 50; }
         iframe { width: 100%; height: 100%; border: none; }
 
-        /* --- STATUS BAR --- */
+        /* --- UI OVERLAYS (Status & Controls) --- */
         .status-bar {
-            position: fixed !important; top: 15px; left: 15px; z-index: 1000;
+            position: fixed !important; top: 15px; left: 15px; z-index: 2000;
             background: rgba(0,0,0,0.6); padding: 8px 15px; border-radius: 20px;
             color: white; font-size: 11px; display: flex; gap: 12px; align-items: center;
-            backdrop-filter: blur(5px); border: 1px solid rgba(255,255,255,0.1);
-            pointer-events: auto; cursor: pointer; /* ทำให้กดได้เพื่อเทส */
+            backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1);
+            pointer-events: auto; cursor: pointer;
         }
-        .status-item { display: flex; align-items: center; gap: 5px; white-space: nowrap; }
 
-        /* --- SIDE CONTROL --- */
         .side-ctrl {
             position: fixed !important; right: 15px; top: 50%; transform: translateY(-50%);
             display: flex; flex-direction: column; gap: 15px; align-items: center;
             background: rgba(0,0,0,0.6); padding: 15px 10px; border-radius: 35px;
             backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1);
-            z-index: 1000;
+            z-index: 2000; pointer-events: auto;
         }
         .btn-act { 
-            width: 45px; height: 45px; border-radius: 50%; border: none; 
-            background: rgba(255,255,255,0.15); color: white; font-size: 20px; 
+            width: 48px; height: 48px; border-radius: 50%; border: none; 
+            background: rgba(255,255,255,0.15); color: white; font-size: 22px; 
             cursor: pointer; display: flex; align-items: center; justify-content: center; 
         }
         .btn-act:active { background: white; color: black; }
         .btn-home { background: var(--primary); font-size: 11px; font-weight: bold; }
 
-        /* --- MESSAGE TOAST (Popup) --- */
+        /* --- MESSAGE TOAST (Popup) - Moving to Root for Max Visibility --- */
         #msg-toast {
             position: fixed !important; top: 20%; left: 50%; transform: translate(-50%, -50%);
             width: 85%; max-width: 400px; background: rgba(0,0,0,0.95); 
-            border-left: 6px solid var(--success); 
-            color: white; padding: 22px 25px; border-radius: 12px; text-align: center;
-            display: none; z-index: 9999999 !important; pointer-events: auto;
-            box-shadow: 0 15px 40px rgba(0,0,0,0.9);
+            border-left: 8px solid var(--success); 
+            color: white; padding: 25px; border-radius: 15px; text-align: center;
+            display: none; z-index: 99999999 !important; pointer-events: auto;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.9);
             animation: slideInToast 0.4s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+            backdrop-filter: blur(15px);
         }
         @keyframes slideInToast { 
-            from { opacity: 0; transform: translate(-50%, -80%); } 
+            from { opacity: 0; transform: translate(-50%, -100%); } 
             to { opacity: 1; transform: translate(-50%, -50%); } 
         }
-        .toast-close { position: absolute; top: 8px; right: 12px; color: #666; font-size: 20px; background: none; border: none; cursor: pointer; }
+        .toast-close { position: absolute; top: 10px; right: 15px; color: #555; font-size: 24px; background: none; border: none; cursor: pointer; }
 
         /* --- CHAT REPLY PANEL --- */
         #chat-panel {
-            position: fixed !important; bottom: 20px; left: 50%; transform: translateX(-50%);
-            width: 90%; max-width: 420px; background: rgba(15,15,15,0.95);
+            position: fixed !important; bottom: 25px; left: 50%; transform: translateX(-50%);
+            width: 92%; max-width: 420px; background: rgba(15,15,15,0.96);
             border: 1px solid rgba(255,255,255,0.1); border-top: 4px solid var(--primary);
-            padding: 18px; border-radius: 15px; z-index: 2000 !important;
+            padding: 20px; border-radius: 18px; z-index: 999999 !important;
             display: none; flex-direction: column; gap: 12px;
-            backdrop-filter: blur(20px);
+            backdrop-filter: blur(25px); pointer-events: auto;
         }
-        .chat-panel-close { position: absolute; top: 8px; right: 12px; color: #555; background: none; border: none; font-size: 20px; cursor: pointer; }
+        .chat-panel-close { position: absolute; top: 10px; right: 15px; color: #555; background: none; border: none; font-size: 24px; cursor: pointer; }
         .quick-replies { display: flex; gap: 8px; }
         .quick-replies button {
             flex: 1; background: #222; color: white; border: 1px solid #333;
-            padding: 12px 5px; border-radius: 10px; font-size: 13px; cursor: pointer; font-family: 'Prompt', sans-serif;
+            padding: 14px 5px; border-radius: 12px; font-size: 13px; cursor: pointer; font-family: 'Prompt', sans-serif;
         }
         .quick-replies button:active { background: var(--primary); }
-        .chat-input-row { display: flex; gap: 8px; }
+        .chat-input-row { display: flex; gap: 10px; }
         #chat-input {
             flex: 1; background: #000; border: 1px solid #444; color: white;
-            padding: 12px; border-radius: 10px; font-family: 'Prompt', sans-serif; font-size: 16px; outline: none;
+            padding: 14px; border-radius: 12px; font-family: 'Prompt', sans-serif; font-size: 16px; outline: none;
         }
-        .btn-send { background: var(--primary); color: white; border: none; padding: 0 20px; border-radius: 10px; font-weight: bold; cursor: pointer; }
+        .btn-send { background: var(--primary); color: white; border: none; padding: 0 22px; border-radius: 12px; font-weight: bold; cursor: pointer; }
 
         /* --- HISTORY PANEL --- */
         #history-panel {
             position: fixed !important; inset: 0; background: rgba(5,5,5,0.98);
-            z-index: 3000 !important; display: none; flex-direction: column;
-            padding-top: env(safe-area-inset-top, 20px);
-            backdrop-filter: blur(25px);
+            z-index: 9999999 !important; display: none; flex-direction: column;
+            padding-top: env(safe-area-inset-top, 25px);
+            backdrop-filter: blur(30px);
         }
         .history-top { padding: 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #222; }
         #history-list { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 12px; }
-        .h-item { padding: 12px 16px; border-radius: 14px; max-width: 85%; line-height: 1.5; font-size: 14px; }
-        .h-meta { font-size: 10px; margin-bottom: 4px; opacity: 0.5; font-weight: 300; }
+        .h-item { padding: 14px 18px; border-radius: 16px; max-width: 85%; line-height: 1.5; font-size: 14px; }
+        .h-meta { font-size: 10px; margin-bottom: 5px; opacity: 0.5; }
         .h-from-mcr { align-self: flex-start; background: #1a1a1a; border-left: 4px solid var(--success); }
         .h-from-me { align-self: flex-end; background: #007aff15; border-right: 4px solid var(--primary); text-align: right; }
 
         /* --- GHOST MODE --- */
-        #ghost { position: fixed !important; inset: 0; background: #000; z-index: 99999999 !important; display: none; align-items: center; justify-content: center; flex-direction: column; color: #444; }
+        #ghost { position: fixed !important; inset: 0; background: #000; z-index: 999999999 !important; display: none; align-items: center; justify-content: center; flex-direction: column; color: #444; }
     </style>
 </head>
 <body>
 
+    <!-- LOBBY -->
     <div id="lobby">
         <h1>CM108 LIVE</h1>
         <div class="label">1. คุณภาพสัญญาณ</div>
@@ -149,11 +149,12 @@
         </div>
     </div>
 
+    <!-- LIVE VIEW CONTAINER -->
     <div id="live-view">
         <iframe id="vid" allow="camera;microphone;fullscreen;display-capture;autoplay"></iframe>
 
-        <!-- เพิ่ม onclick เพื่อกดทดสอบ Popup -->
-        <div class="status-bar" id="status-bar" style="display: none;" onclick="showToast('ระบบแจ้งเตือนออนไลน์ (กดเพื่อทดสอบ)')">
+        <!-- Status Bar (Click to Test Toast) -->
+        <div class="status-bar" id="status-bar" style="display: none;" onclick="testToast()">
             <div class="status-item"><span id="net-icon">🟢</span> <span id="net-text">Signal OK</span></div>
         </div>
 
@@ -164,41 +165,46 @@
             <button class="btn-act" onclick="toggleGhost()">🌙</button>
             <button class="btn-act btn-home" onclick="location.reload()">HOME</button>
         </div>
+    </div>
 
-        <!-- Popup ข้อความเข้า -->
-        <div id="msg-toast">
-            <button class="toast-close" onclick="closeToast()">✕</button>
-            <div style="font-size:11px; color:var(--success); margin-bottom:8px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px;">📥 ศูนย์ MCR แจ้งว่า:</div>
-            <span id="msg-text" style="font-size:26px; font-weight:700; color:#fff; line-height: 1.3;">--</span>
+    <!-- PORTALS (Moved to root for mobile compatibility) -->
+    
+    <!-- Popup ข้อความเข้า -->
+    <div id="msg-toast">
+        <button class="toast-close" onclick="closeToast()">✕</button>
+        <div style="font-size:11px; color:var(--success); margin-bottom:10px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px;">📥 ศูนย์ MCR แจ้งว่า:</div>
+        <span id="msg-text" style="font-size:26px; font-weight:700; color:#fff; line-height: 1.3;">--</span>
+    </div>
+
+    <!-- แผงตอบกลับ -->
+    <div id="chat-panel">
+        <button class="chat-panel-close" onclick="toggleChat()">✕</button>
+        <div style="font-size:16px; font-weight:bold; color:#fff; margin-bottom:15px;">ตอบกลับศูนย์ควบคุม</div>
+        <div class="quick-replies">
+            <button onclick="sendQuickChat('รับทราบ')">รับทราบ</button>
+            <button onclick="sendQuickChat('รอสักครู่')">รอสักครู่</button>
+            <button onclick="sendQuickChat('พร้อมแล้ว')">พร้อมแล้ว</button>
         </div>
-
-        <div id="chat-panel">
-            <button class="chat-panel-close" onclick="toggleChat()">✕</button>
-            <div style="font-size:15px; font-weight:bold; color:#fff; margin-bottom:12px;">ตอบกลับศูนย์ควบคุม</div>
-            <div class="quick-replies">
-                <button onclick="sendQuickChat('รับทราบ')">รับทราบ</button>
-                <button onclick="sendQuickChat('รอสักครู่')">รอสักครู่</button>
-                <button onclick="sendQuickChat('พร้อมแล้ว')">พร้อมแล้ว</button>
-            </div>
-            <div class="chat-input-row">
-                <input type="text" id="chat-input" placeholder="พิมพ์ข้อความ..." onkeypress="if(event.key === 'Enter') sendCustomChat()">
-                <button class="btn-send" onclick="sendCustomChat()">ส่ง</button>
-            </div>
-        </div>
-
-        <div id="history-panel">
-            <div class="history-top">
-                <h2 style="margin:0; font-size:20px; color:var(--primary);">📜 ประวัติการสนทนา</h2>
-                <button onclick="toggleHistory()" style="background:none; border:none; color:#555; font-size:26px;">✕</button>
-            </div>
-            <div id="history-list"></div>
+        <div class="chat-input-row">
+            <input type="text" id="chat-input" placeholder="พิมพ์ข้อความ..." onkeypress="if(event.key === 'Enter') sendCustomChat()">
+            <button class="btn-send" onclick="sendCustomChat()">ส่ง</button>
         </div>
     </div>
 
+    <!-- แผงประวัติ -->
+    <div id="history-panel">
+        <div class="history-top">
+            <h2 style="margin:0; font-size:20px; color:var(--primary);">📜 ประวัติการสนทนา</h2>
+            <button onclick="toggleHistory()" style="background:none; border:none; color:#555; font-size:26px;">✕</button>
+        </div>
+        <div id="history-list"></div>
+    </div>
+
+    <!-- พักจอ -->
     <div id="ghost" onclick="toggleGhost()">
         <div style="font-size:60px; margin-bottom:20px;">🎥</div>
         <h2 style="color:#fff; margin:0; font-size: 24px;">ระบบพักหน้าจอ</h2>
-        <p style="font-size:14px; margin-top:8px; opacity: 0.5;">(สัญญาณภาพและเสียงยังคงส่งออกตามปกติ)</p>
+        <p style="font-size:14px; margin-top:10px; opacity: 0.5;">(สัญญาณภาพและเสียงยังคงส่งออกตามปกติ)</p>
     </div>
 
     <script>
@@ -228,26 +234,23 @@
             
             requestWakeLock();
             
-            // === ระบบดักจับข้อความแบบเจาะลึก (Deep Discovery) ===
+            // Listener สำหรับดักจับแชท
             window.addEventListener('message', function(e) {
                 if (!e.data) return;
                 let data = e.data;
-                
                 if (typeof data === 'string' && data.trim().startsWith('{')) {
                     try { data = JSON.parse(data); } catch(err) { return; }
                 }
 
-                function search(obj) {
+                function searchMsg(obj) {
                     if (!obj || typeof obj !== 'object') return null;
-                    // ค้นหาคีย์ที่น่าจะเป็นข้อความ
                     let m = obj.msg || obj.chat || obj.text || (obj.gotchat ? obj.gotchat.msg : null);
                     if (m && typeof m === 'string' && m !== "[object Object]") return m;
-                    // ขุดลงไปในชั้น data ถ้ามี
-                    if (obj.data) return search(obj.data);
+                    if (obj.data) return searchMsg(obj.data);
                     return null;
                 }
 
-                let found = search(data);
+                let found = searchMsg(data);
                 if (found) {
                     let clean = found.replace(/<[^>]*>?/gm, '').trim();
                     if (clean !== "") {
@@ -301,16 +304,23 @@
 
         let toastT;
         function showToast(txt) {
-            console.log("Showing Toast:", txt);
             const t = document.getElementById('msg-toast');
             const m = document.getElementById('msg-text');
             m.innerText = txt;
-            t.style.display = 'block';
             
-            if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+            // บังคับให้เบราว์เซอร์ล้างสถานะและแสดงใหม่
+            t.style.display = 'none';
+            setTimeout(() => {
+                t.style.display = 'block';
+                if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+            }, 10);
             
             if(toastT) clearTimeout(toastT);
             toastT = setTimeout(() => { t.style.display = 'none'; }, 12000);
+        }
+
+        function testToast() {
+            showToast("ทดสอบแจ้งเตือนจากมือถือ OK!");
         }
 
         function closeToast() { document.getElementById('msg-toast').style.display = 'none'; }
