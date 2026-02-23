@@ -50,11 +50,13 @@
 
         /* --- STATUS BAR --- */
         .status-bar {
-            position: fixed !important; top: 15px; left: 15px; z-index: 999;
-            background: rgba(0,0,0,0.6); padding: 8px 12px; border-radius: 20px;
+            position: fixed !important; top: 15px; left: 15px; z-index: 1000;
+            background: rgba(0,0,0,0.6); padding: 8px 15px; border-radius: 20px;
             color: white; font-size: 11px; display: flex; gap: 12px; align-items: center;
             backdrop-filter: blur(5px); border: 1px solid rgba(255,255,255,0.1);
+            pointer-events: auto; cursor: pointer; /* ทำให้กดได้เพื่อเทส */
         }
+        .status-item { display: flex; align-items: center; gap: 5px; white-space: nowrap; }
 
         /* --- SIDE CONTROL --- */
         .side-ctrl {
@@ -77,9 +79,9 @@
             position: fixed !important; top: 20%; left: 50%; transform: translate(-50%, -50%);
             width: 85%; max-width: 400px; background: rgba(0,0,0,0.95); 
             border-left: 6px solid var(--success); 
-            color: white; padding: 20px 25px; border-radius: 12px; text-align: center;
-            display: none; z-index: 2000 !important; pointer-events: auto;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+            color: white; padding: 22px 25px; border-radius: 12px; text-align: center;
+            display: none; z-index: 9999999 !important; pointer-events: auto;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.9);
             animation: slideInToast 0.4s cubic-bezier(0.18, 0.89, 0.32, 1.28);
         }
         @keyframes slideInToast { 
@@ -93,7 +95,7 @@
             position: fixed !important; bottom: 20px; left: 50%; transform: translateX(-50%);
             width: 90%; max-width: 420px; background: rgba(15,15,15,0.95);
             border: 1px solid rgba(255,255,255,0.1); border-top: 4px solid var(--primary);
-            padding: 18px; border-radius: 15px; z-index: 2100 !important;
+            padding: 18px; border-radius: 15px; z-index: 2000 !important;
             display: none; flex-direction: column; gap: 12px;
             backdrop-filter: blur(20px);
         }
@@ -125,12 +127,8 @@
         .h-from-mcr { align-self: flex-start; background: #1a1a1a; border-left: 4px solid var(--success); }
         .h-from-me { align-self: flex-end; background: #007aff15; border-right: 4px solid var(--primary); text-align: right; }
 
-        /* Custom Scrollbar for History */
-        #history-list::-webkit-scrollbar { width: 4px; }
-        #history-list::-webkit-scrollbar-thumb { background: #333; border-radius: 10px; }
-
         /* --- GHOST MODE --- */
-        #ghost { position: fixed !important; inset: 0; background: #000; z-index: 5000 !important; display: none; align-items: center; justify-content: center; flex-direction: column; color: #444; }
+        #ghost { position: fixed !important; inset: 0; background: #000; z-index: 99999999 !important; display: none; align-items: center; justify-content: center; flex-direction: column; color: #444; }
     </style>
 </head>
 <body>
@@ -154,7 +152,8 @@
     <div id="live-view">
         <iframe id="vid" allow="camera;microphone;fullscreen;display-capture;autoplay"></iframe>
 
-        <div class="status-bar" id="status-bar" style="display: none;">
+        <!-- เพิ่ม onclick เพื่อกดทดสอบ Popup -->
+        <div class="status-bar" id="status-bar" style="display: none;" onclick="showToast('ระบบแจ้งเตือนออนไลน์ (กดเพื่อทดสอบ)')">
             <div class="status-item"><span id="net-icon">🟢</span> <span id="net-text">Signal OK</span></div>
         </div>
 
@@ -173,7 +172,6 @@
             <span id="msg-text" style="font-size:26px; font-weight:700; color:#fff; line-height: 1.3;">--</span>
         </div>
 
-        <!-- แผงส่งข้อความตอบกลับ -->
         <div id="chat-panel">
             <button class="chat-panel-close" onclick="toggleChat()">✕</button>
             <div style="font-size:15px; font-weight:bold; color:#fff; margin-bottom:12px;">ตอบกลับศูนย์ควบคุม</div>
@@ -188,7 +186,6 @@
             </div>
         </div>
 
-        <!-- แผงประวัติสนทนา -->
         <div id="history-panel">
             <div class="history-top">
                 <h2 style="margin:0; font-size:20px; color:var(--primary);">📜 ประวัติการสนทนา</h2>
@@ -221,7 +218,6 @@
             else if(mode === 'safe') p = "&width=1280&height=720&bitrate=2500&framerate=30";
             else p = "&quality=1";
 
-            // api=1 จำเป็นสำหรับการรับส่งข้อมูลผ่าน postMessage
             let url = "https://vdo.ninja/?push=" + id + "&room=CM108_NewsRoom" + p + 
                       "&clean=1&viewchat=1&api=1&label=" + id;
 
@@ -230,43 +226,33 @@
             document.getElementById('live-view').style.display = 'block';
             document.getElementById('status-bar').style.display = 'flex';
             
-            initMonitor();
             requestWakeLock();
             
-            // === ระบบดักจับข้อความแบบปรับปรุง (Robust Listener) ===
+            // === ระบบดักจับข้อความแบบเจาะลึก (Deep Discovery) ===
             window.addEventListener('message', function(e) {
                 if (!e.data) return;
                 let data = e.data;
                 
-                // แปลง JSON string เป็น Object
                 if (typeof data === 'string' && data.trim().startsWith('{')) {
                     try { data = JSON.parse(data); } catch(err) { return; }
                 }
 
-                let foundMsg = null;
-
-                // 1. ค้นหาข้อความในทุกระดับ (Omni-Search)
-                function extractMsg(obj) {
+                function search(obj) {
                     if (!obj || typeof obj !== 'object') return null;
-                    
-                    // ดักจับคีย์มาตรฐาน
+                    // ค้นหาคีย์ที่น่าจะเป็นข้อความ
                     let m = obj.msg || obj.chat || obj.text || (obj.gotchat ? obj.gotchat.msg : null);
                     if (m && typeof m === 'string' && m !== "[object Object]") return m;
-
-                    // ค้นหาในชั้นลูก (เช่น data.msg)
-                    if (obj.data) return extractMsg(obj.data);
-                    
+                    // ขุดลงไปในชั้น data ถ้ามี
+                    if (obj.data) return search(obj.data);
                     return null;
                 }
 
-                foundMsg = extractMsg(data);
-
-                if (foundMsg) {
-                    // ล้าง HTML และช่องว่าง
-                    let clean = foundMsg.replace(/<[^>]*>?/gm, '').trim();
+                let found = search(data);
+                if (found) {
+                    let clean = found.replace(/<[^>]*>?/gm, '').trim();
                     if (clean !== "") {
                         showToast(clean);
-                        addHistory(clean, "MCR ศูนย์ควบคุม", false);
+                        addHistory(clean, "ศูนย์ MCR", false);
                     }
                 }
             });
@@ -275,10 +261,8 @@
         function sendToNinjaChat(text) {
             const iframe = document.getElementById('vid');
             if (!iframe || !iframe.contentWindow) return;
-            // ส่งข้อความออกไป
             iframe.contentWindow.postMessage({ "action": "sendChat", "value": text }, '*');
             iframe.contentWindow.postMessage({ "sendChat": text }, '*');
-            
             addHistory(text, "เรา (สนาม)", true);
             if (document.getElementById('chat-panel').style.display === 'flex') toggleChat();
         }
@@ -295,39 +279,34 @@
         function addHistory(msg, sender, isMe) {
             const list = document.getElementById('history-list');
             const time = new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
-            
             const div = document.createElement('div');
             div.className = `h-item ${isMe ? 'h-from-me' : 'h-from-mcr'}`;
-            div.innerHTML = `
-                <div class="h-meta">${sender} • ${time}</div>
-                <div class="h-msg">${msg}</div>
-            `;
+            div.innerHTML = `<div class="h-meta">${sender} • ${time}</div><div class="h-msg">${msg}</div>`;
             list.appendChild(div);
             list.scrollTop = list.scrollHeight;
         }
 
         function toggleChat() {
+            document.getElementById('history-panel').style.display = 'none';
             let p = document.getElementById('chat-panel');
-            let h = document.getElementById('history-panel');
-            h.style.display = 'none';
             p.style.display = (p.style.display === 'flex') ? 'none' : 'flex';
             if(p.style.display === 'flex') document.getElementById('chat-input').focus();
         }
 
         function toggleHistory() {
+            document.getElementById('chat-panel').style.display = 'none';
             let p = document.getElementById('history-panel');
-            let c = document.getElementById('chat-panel');
-            c.style.display = 'none';
             p.style.display = (p.style.display === 'flex') ? 'none' : 'flex';
         }
 
         let toastT;
         function showToast(txt) {
+            console.log("Showing Toast:", txt);
             const t = document.getElementById('msg-toast');
-            document.getElementById('msg-text').innerText = txt;
+            const m = document.getElementById('msg-text');
+            m.innerText = txt;
             t.style.display = 'block';
             
-            // สั่นเตือน
             if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
             
             if(toastT) clearTimeout(toastT);
@@ -335,12 +314,7 @@
         }
 
         function closeToast() { document.getElementById('msg-toast').style.display = 'none'; }
-        
-        function toggleGhost() {
-            let g = document.getElementById('ghost');
-            g.style.display = (g.style.display === 'flex') ? 'none' : 'flex';
-        }
-
+        function toggleGhost() { document.getElementById('ghost').style.display = (document.getElementById('ghost').style.display === 'flex') ? 'none' : 'flex'; }
         function toggleFullScreen() {
             const el = document.documentElement;
             if (!document.fullscreenElement && !document.webkitFullscreenElement) {
@@ -349,18 +323,7 @@
                 (document.exitFullscreen || document.webkitExitFullscreen).call(document);
             }
         }
-
         async function requestWakeLock() { try { if ('wakeLock' in navigator) await navigator.wakeLock.request('screen'); } catch (e) {} }
-
-        function initMonitor() {
-            function up() {
-                const txt = document.getElementById('net-text');
-                const icon = document.getElementById('net-icon');
-                if (!navigator.onLine) { txt.innerText = "OFFLINE"; icon.innerText = "🔴"; return; }
-                txt.innerText = "Signal OK"; icon.innerText = "🟢";
-            }
-            up(); window.addEventListener('online', up); window.addEventListener('offline', up);
-        }
     </script>
 </body>
 </html>
