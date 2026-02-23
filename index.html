@@ -72,7 +72,7 @@
         .btn-act:active { background: white; color: black; }
         .btn-home { background: var(--primary); font-size: 11px; font-weight: bold; }
 
-        /* --- MESSAGE TOAST (Popup) - อยู่ชั้นบนสุดเสมอ --- */
+        /* --- MESSAGE TOAST (Popup) --- */
         #msg-toast {
             position: fixed !important; top: 20%; left: 50%; transform: translate(-50%, -50%);
             width: 85%; max-width: 400px; background: rgba(0,0,0,0.95); 
@@ -112,7 +112,7 @@
         }
         .btn-send { background: var(--primary); color: white; border: none; padding: 0 22px; border-radius: 12px; font-weight: bold; cursor: pointer; }
 
-        /* --- HISTORY PANEL --- */
+        /* --- HISTORY PANEL (ปรับปรุงสีและการอ่าน) --- */
         #history-panel {
             position: fixed !important; inset: 0; background: rgba(5,5,5,0.98);
             z-index: 950000 !important; display: none; flex-direction: column;
@@ -121,10 +121,33 @@
         }
         .history-top { padding: 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #222; }
         #history-list { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 12px; }
-        .h-item { padding: 14px 18px; border-radius: 16px; max-width: 85%; line-height: 1.5; font-size: 14px; }
-        .h-meta { font-size: 10px; margin-bottom: 5px; opacity: 0.5; }
-        .h-from-mcr { align-self: flex-start; background: #1a1a1a; border-left: 4px solid var(--success); }
-        .h-from-me { align-self: flex-end; background: #007aff15; border-right: 4px solid var(--primary); text-align: right; }
+        
+        .h-item { 
+            padding: 14px 18px; 
+            border-radius: 16px; 
+            max-width: 85%; 
+            line-height: 1.5; 
+            font-size: 15px; /* เพิ่มขนาดตัวอักษรให้อ่านง่าย */
+            color: #ffffff; /* บังคับให้ข้อความเป็นสีขาว 100% */
+            word-break: break-word; /* ป้องกันข้อความยาวทะลุกรอบ */
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3); /* เพิ่มเงาให้ลอยขึ้นมาจากพื้นหลัง */
+        }
+        .h-meta { 
+            font-size: 11px; 
+            margin-bottom: 6px; 
+            color: #bbbbbb; /* สีข้อมูลผู้ส่งให้อ่อนลงเล็กน้อยแต่ไม่อ่านยาก */
+        }
+        .h-from-mcr { 
+            align-self: flex-start; 
+            background: #222222; /* พื้นหลังเทาเข้มตัดกับตัวหนังสือสีขาว */
+            border-left: 4px solid var(--success); 
+        }
+        .h-from-me { 
+            align-self: flex-end; 
+            background: #003b73; /* พื้นหลังน้ำเงินเข้ม ช่วยให้ตัวหนังสือสีขาวเด่นขึ้นมาก */
+            border-right: 4px solid var(--primary); 
+            text-align: right; 
+        }
 
         /* --- GHOST MODE --- */
         #ghost { position: fixed !important; inset: 0; background: #000; z-index: 99999999 !important; display: none; align-items: center; justify-content: center; flex-direction: column; color: #444; }
@@ -164,7 +187,6 @@
         </div>
     </div>
 
-    <!-- Popup Toast -->
     <div id="msg-toast">
         <button class="toast-close" onclick="closeToast()">✕</button>
         <div style="font-size:11px; color:var(--success); margin-bottom:10px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px;">📥 ศูนย์ MCR แจ้งว่า:</div>
@@ -203,14 +225,12 @@
         let mode = 'hq';
         let currentCam = "";
 
-        // ฟังก์ชันช่วยทำความสะอาดข้อความ
         function stripHTML(html) {
             if (!html) return "";
             if (typeof html !== 'string') html = String(html);
             return html.replace(/<[^>]*>?/gm, '').replace(/:\s*$/, '').trim();
         }
 
-        // ฟังก์ชันกรองขยะระบบ (ตัวเลขความละเอียด, UUID)
         function isSystemTrash(str) {
             if (!str) return true;
             const s = String(str).trim();
@@ -244,7 +264,6 @@
             
             requestWakeLock();
             
-            // === นำโค้ดรับข้อความที่สมบูรณ์ที่สุดกลับมา 100% ===
             window.addEventListener('message', function(e) {
                 if (!e.data) return;
                 let data = e.data;
