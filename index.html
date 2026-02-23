@@ -10,15 +10,21 @@
     <title>CM108 Mobile Unit</title>
     <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;500;700&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --primary: #007aff;
+            --success: #34c759;
+            --danger: #ff3b30;
+        }
+
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body, html { margin: 0; padding: 0; width: 100%; height: 100dvh; background: #000; font-family: 'Prompt', sans-serif; overflow: hidden; }
 
-        /* --- LOBBY --- */
+        /* --- LOBBY SECTION --- */
         #lobby { 
             position: absolute; inset: 0; z-index: 100; background: #111; 
             display: flex; flex-direction: column; padding: 20px; text-align: center; overflow-y: auto; 
         }
-        h1 { color: #007aff; margin-bottom: 10px; font-size: 26px; }
+        h1 { color: var(--primary); margin-bottom: 10px; font-size: 26px; font-weight: 700; }
         .label { color: #888; font-size: 14px; margin: 15px 0 10px; border-bottom: 1px solid #333; padding-bottom: 5px; text-align: left; }
         
         .mode-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
@@ -26,7 +32,7 @@
             background: #1a1a1a; border: 1px solid #333; border-radius: 12px; padding: 15px 5px; 
             color: #888; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 5px; 
         }
-        .m-btn.active { background: #007aff; color: white; border-color: #007aff; }
+        .m-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
         .m-btn span { font-weight: bold; font-size: 14px; }
         .m-btn small { font-size: 10px; opacity: 0.8; }
         
@@ -35,7 +41,7 @@
             background: linear-gradient(145deg, #222, #1b1b1b); border: 1px solid #333; 
             border-radius: 12px; padding: 25px 0; cursor: pointer; color: white; transition: 0.2s;
         }
-        .c-card:active { transform: scale(0.98); border-color: #007aff; }
+        .c-card:active { transform: scale(0.98); border-color: var(--primary); }
         .c-card strong { display: block; font-size: 18px; margin-bottom: 5px; }
 
         /* --- LIVE VIEW --- */
@@ -48,9 +54,7 @@
             background: rgba(0,0,0,0.6); padding: 8px 12px; border-radius: 20px;
             color: white; font-size: 11px; display: flex; gap: 12px; align-items: center;
             backdrop-filter: blur(5px); border: 1px solid rgba(255,255,255,0.1);
-            pointer-events: auto; cursor: pointer;
         }
-        .status-item { display: flex; align-items: center; gap: 5px; white-space: nowrap; }
 
         /* --- SIDE CONTROL --- */
         .side-ctrl {
@@ -58,7 +62,7 @@
             display: flex; flex-direction: column; gap: 15px; align-items: center;
             background: rgba(0,0,0,0.6); padding: 15px 10px; border-radius: 35px;
             backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1);
-            z-index: 1000; pointer-events: auto;
+            z-index: 1000;
         }
         .btn-act { 
             width: 45px; height: 45px; border-radius: 50%; border: none; 
@@ -66,63 +70,62 @@
             cursor: pointer; display: flex; align-items: center; justify-content: center; 
         }
         .btn-act:active { background: white; color: black; }
-        .btn-home { background: #007aff; font-size: 11px; font-weight: bold; }
+        .btn-home { background: var(--primary); font-size: 11px; font-weight: bold; }
 
-        /* --- MESSAGE TOAST (Incoming) --- */
+        /* --- MESSAGE TOAST (Popup) --- */
         #msg-toast {
             position: fixed !important; top: 20%; left: 50%; transform: translate(-50%, -50%);
             width: 85%; max-width: 400px; background: rgba(0,0,0,0.95); 
-            border-left: 5px solid #34c759; 
-            color: white; padding: 15px 20px; border-radius: 8px; text-align: center;
+            border-left: 6px solid var(--success); 
+            color: white; padding: 18px 25px; border-radius: 12px; text-align: center;
             display: none; z-index: 2000 !important; pointer-events: auto;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-            animation: slideInToast 0.3s ease-out;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+            animation: slideInToast 0.4s cubic-bezier(0.18, 0.89, 0.32, 1.28);
         }
-        @keyframes slideInToast { from { opacity: 0; transform: translate(-50%, -60%); } to { opacity: 1; transform: translate(-50%, -50%); } }
-        .toast-close { position: absolute; top: 5px; right: 10px; color: #888; font-size: 16px; background: none; border: none; cursor: pointer; padding: 5px; }
+        @keyframes slideInToast { 
+            from { opacity: 0; transform: translate(-50%, -80%); } 
+            to { opacity: 1; transform: translate(-50%, -50%); } 
+        }
+        .toast-close { position: absolute; top: 8px; right: 12px; color: #666; font-size: 20px; background: none; border: none; cursor: pointer; }
 
-        /* --- CHAT PANEL (Reply) --- */
+        /* --- CHAT REPLY PANEL --- */
         #chat-panel {
             position: fixed !important; bottom: 20px; left: 50%; transform: translateX(-50%);
-            width: 90%; max-width: 400px; background: rgba(10,10,10,0.95);
-            border: 1px solid rgba(255,255,255,0.1); border-top: 3px solid #007aff;
-            padding: 15px; border-radius: 12px; z-index: 2100 !important;
-            display: none; flex-direction: column; gap: 10px;
-            backdrop-filter: blur(15px); pointer-events: auto;
-        }
-        .chat-panel-close { position: absolute; top: 5px; right: 10px; color: #aaa; background: none; border: none; font-size: 18px; cursor: pointer; }
-        .quick-replies { display: flex; gap: 8px; justify-content: space-between; }
-        .quick-replies button {
-            flex: 1; background: #222; color: white; border: 1px solid #333;
-            padding: 12px 5px; border-radius: 8px; font-size: 13px; cursor: pointer; font-family: 'Prompt', sans-serif;
-        }
-        .quick-replies button:active { background: #007aff; }
-        .chat-input-row { display: flex; gap: 8px; margin-top: 5px; }
-        #chat-input {
-            flex: 1; background: #111; border: 1px solid #444; color: white;
-            padding: 12px; border-radius: 8px; font-family: 'Prompt', sans-serif; font-size: 15px;
-        }
-        .btn-send { background: #007aff; color: white; border: none; padding: 0 15px; border-radius: 8px; font-weight: bold; cursor: pointer; }
-
-        /* --- HISTORY PANEL (New) --- */
-        #history-panel {
-            position: fixed !important; inset: 0; background: rgba(0,0,0,0.9);
-            z-index: 3000 !important; display: none; flex-direction: column;
-            padding-top: env(safe-area-inset-top, 20px);
+            width: 90%; max-width: 420px; background: rgba(15,15,15,0.95);
+            border: 1px solid rgba(255,255,255,0.1); border-top: 4px solid var(--primary);
+            padding: 18px; border-radius: 15px; z-index: 2100 !important;
+            display: none; flex-direction: column; gap: 12px;
             backdrop-filter: blur(20px);
         }
-        .history-top { padding: 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #222; }
-        #history-list { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 10px; }
-        
-        /* สไตล์ข้อความในประวัติ */
-        .h-item { padding: 10px 15px; border-radius: 12px; max-width: 85%; line-height: 1.4; }
-        .h-meta { font-size: 10px; margin-bottom: 3px; opacity: 0.6; }
-        /* ข้อความจากศูนย์ (ชิดซ้าย) */
-        .h-from-mcr { align-self: flex-start; background: #1a1a1a; border-left: 3px solid #34c759; }
-        /* ข้อความจากเราเอง (ชิดขวา) */
-        .h-from-me { align-self: flex-end; background: #007aff22; border-right: 3px solid #007aff; text-align: right; }
+        .chat-panel-close { position: absolute; top: 8px; right: 12px; color: #555; background: none; border: none; font-size: 20px; cursor: pointer; }
+        .quick-replies { display: flex; gap: 8px; }
+        .quick-replies button {
+            flex: 1; background: #222; color: white; border: 1px solid #333;
+            padding: 12px 5px; border-radius: 10px; font-size: 13px; cursor: pointer; font-family: 'Prompt', sans-serif;
+        }
+        .quick-replies button:active { background: var(--primary); }
+        .chat-input-row { display: flex; gap: 8px; }
+        #chat-input {
+            flex: 1; background: #000; border: 1px solid #444; color: white;
+            padding: 12px; border-radius: 10px; font-family: 'Prompt', sans-serif; font-size: 16px; outline: none;
+        }
+        .btn-send { background: var(--primary); color: white; border: none; padding: 0 20px; border-radius: 10px; font-weight: bold; cursor: pointer; }
 
-        /* Custom Scrollbar */
+        /* --- HISTORY PANEL --- */
+        #history-panel {
+            position: fixed !important; inset: 0; background: rgba(5,5,5,0.98);
+            z-index: 3000 !important; display: none; flex-direction: column;
+            padding-top: env(safe-area-inset-top, 20px);
+            backdrop-filter: blur(25px);
+        }
+        .history-top { padding: 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #222; }
+        #history-list { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 12px; }
+        .h-item { padding: 12px 16px; border-radius: 14px; max-width: 85%; line-height: 1.5; font-size: 14px; }
+        .h-meta { font-size: 10px; margin-bottom: 4px; opacity: 0.5; font-weight: 300; }
+        .h-from-mcr { align-self: flex-start; background: #1a1a1a; border-left: 4px solid var(--success); }
+        .h-from-me { align-self: flex-end; background: #007aff15; border-right: 4px solid var(--primary); text-align: right; }
+
+        /* Custom Scrollbar for History */
         #history-list::-webkit-scrollbar { width: 4px; }
         #history-list::-webkit-scrollbar-thumb { background: #333; border-radius: 10px; }
 
@@ -134,17 +137,17 @@
 
     <div id="lobby">
         <h1>CM108 LIVE</h1>
-        <div class="label">1. เลือกโหมดคุณภาพ</div>
+        <div class="label">1. คุณภาพสัญญาณ</div>
         <div class="mode-grid">
             <div class="m-btn active" id="m-hq" onclick="setMode('hq')"><span>ชัดพิเศษ</span><small>1080p 60fps</small></div>
             <div class="m-btn" id="m-safe" onclick="setMode('safe')"><span>เน้นเสถียร</span><small>720p 30fps</small></div>
             <div class="m-btn" id="m-auto" onclick="setMode('auto')"><span>ออโต้</span><small>ปรับตามเน็ต</small></div>
         </div>
-        <div class="label">2. เลือกช่องกล้อง</div>
+        <div class="label">2. ระบุช่องกล้อง</div>
         <div class="cam-grid">
-            <div class="c-card" onclick="start('CM108_Cam1')"><strong>CAM 01</strong><small style="color:#888">กล้องหลัก</small></div>
-            <div class="c-card" onclick="start('CM108_Cam2')"><strong>CAM 02</strong><small style="color:#888">กล้องรอง</small></div>
-            <div class="c-card" onclick="start('CM108_Cam3')"><strong>CAM 03</strong><small style="color:#888">มุมกว้าง</small></div>
+            <div class="c-card" onclick="start('CM108_Cam1')"><strong>CAM 01</strong><small>กล้องหลัก</small></div>
+            <div class="c-card" onclick="start('CM108_Cam2')"><strong>CAM 02</strong><small>กล้องรอง</small></div>
+            <div class="c-card" onclick="start('CM108_Cam3')"><strong>CAM 03</strong><small>มุมกว้าง</small></div>
         </div>
     </div>
 
@@ -152,28 +155,28 @@
         <iframe id="vid" allow="camera;microphone;fullscreen;display-capture;autoplay"></iframe>
 
         <div class="status-bar" id="status-bar" style="display: none;">
-            <div class="status-item"><span id="net-icon">🟢</span> <span id="net-text">Signal OK</span></div>
+            <div class="status-item"><span id="net-icon">🟢</span> <span id="net-text">Signal Checking...</span></div>
         </div>
 
         <div class="side-ctrl">
-            <button class="btn-act" onclick="toggleChat()" title="ส่งแชท">💬</button>
-            <button class="btn-act" onclick="toggleHistory()" title="ประวัติ">📜</button>
-            <button class="btn-act" onclick="toggleFullScreen()" title="เต็มจอ">⛶</button>
-            <button class="btn-act" onclick="toggleGhost()" title="พักจอ">🌙</button>
+            <button class="btn-act" onclick="toggleChat()">💬</button>
+            <button class="btn-act" onclick="toggleHistory()">📜</button>
+            <button class="btn-act" onclick="toggleFullScreen()">⛶</button>
+            <button class="btn-act" onclick="toggleGhost()">🌙</button>
             <button class="btn-act btn-home" onclick="location.reload()">HOME</button>
         </div>
 
-        <!-- แจ้งเตือนข้อความเด้ง (ล่าสุด) -->
+        <!-- Popup ข้อความเข้า -->
         <div id="msg-toast">
             <button class="toast-close" onclick="closeToast()">✕</button>
-            <div style="font-size:10px; color:#34c759; margin-bottom:5px; font-weight: bold;">📥 ข้อความจากศูนย์ MCR:</div>
-            <span id="msg-text" style="font-size:22px; font-weight:bold; color:#fff;">--</span>
+            <div style="font-size:11px; color:var(--success); margin-bottom:8px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px;">📥 ศูนย์ MCR แจ้งว่า:</div>
+            <span id="msg-text" style="font-size:24px; font-weight:700; color:#fff; line-height: 1.3;">--</span>
         </div>
 
-        <!-- แผงส่งคำตอบด่วน -->
+        <!-- แผงส่งข้อความตอบกลับ -->
         <div id="chat-panel">
             <button class="chat-panel-close" onclick="toggleChat()">✕</button>
-            <div style="font-size:14px; font-weight:bold; color:#fff; margin-bottom:10px;">ตอบกลับศูนย์ MCR</div>
+            <div style="font-size:15px; font-weight:bold; color:#fff; margin-bottom:12px;">ตอบกลับศูนย์ควบคุม</div>
             <div class="quick-replies">
                 <button onclick="sendQuickChat('รับทราบ')">รับทราบ</button>
                 <button onclick="sendQuickChat('รอสักครู่')">รอสักครู่</button>
@@ -185,22 +188,22 @@
             </div>
         </div>
 
-        <!-- แผงประวัติแชท (New) -->
+        <!-- แผงประวัติสนทนา -->
         <div id="history-panel">
             <div class="history-top">
-                <h2 style="margin:0; font-size:20px; color:#007aff;">📜 ประวัติแชท</h2>
-                <button onclick="toggleHistory()" style="background:none; border:none; color:#888; font-size:24px;">✕</button>
+                <h2 style="margin:0; font-size:20px; color:var(--primary);">📜 ประวัติการสนทนา</h2>
+                <button onclick="toggleHistory()" style="background:none; border:none; color:#555; font-size:26px;">✕</button>
             </div>
             <div id="history-list">
-                <!-- รายการแชทจะมาที่นี่ -->
+                <!-- Chat log items will appear here -->
             </div>
         </div>
     </div>
 
     <div id="ghost" onclick="toggleGhost()">
-        <div style="font-size:50px; margin-bottom:15px;">🎥</div>
-        <h2 style="color:#fff; margin:0;">พักหน้าจอ</h2>
-        <p style="font-size:12px; margin-top:5px;">(กำลังส่งสัญญาณภาพและเสียงอยู่)</p>
+        <div style="font-size:60px; margin-bottom:20px;">🎥</div>
+        <h2 style="color:#fff; margin:0; font-size: 24px;">ระบบพักหน้าจอ</h2>
+        <p style="font-size:14px; margin-top:8px; opacity: 0.5;">(สัญญาณภาพและเสียงยังคงส่งออกตามปกติ)</p>
     </div>
 
     <script>
@@ -220,6 +223,7 @@
             else if(mode === 'safe') p = "&width=1280&height=720&bitrate=2500&framerate=30";
             else p = "&quality=1";
 
+            // api=1 สำคัญมากในการรับส่งข้อความ
             let url = "https://vdo.ninja/?push=" + id + "&room=CM108_NewsRoom" + p + 
                       "&clean=1&viewchat=1&api=1&label=" + id;
 
@@ -231,25 +235,38 @@
             initMonitor();
             requestWakeLock();
             
-            // ตัวดักฟังข้อความจากศูนย์ (API Message)
+            // === ระบบดักจับข้อความแบบครอบจักรวาล (Universal Message Listener) ===
             window.addEventListener('message', function(e) {
                 if (!e.data) return;
                 let data = e.data;
-                if (typeof data === 'string' && data.startsWith('{')) {
+                
+                // แปลงข้อมูลถ้าเป็น String JSON
+                if (typeof data === 'string' && data.trim().startsWith('{')) {
                     try { data = JSON.parse(data); } catch(err) { return; }
                 }
 
-                // ค้นหาข้อความแชท
-                let msg = null;
-                if (data.gotchat && data.gotchat.msg) msg = data.gotchat.msg;
-                else if (data.chat && typeof data.chat === 'string') msg = data.chat;
-                else if (data.msg && typeof data.msg === 'string') msg = data.msg;
+                let foundMsg = null;
+                
+                // ตรวจหาข้อความในทุกโครงสร้างที่เป็นไปได้
+                if (data.action === 'gotchat' || data.gotchat) {
+                    foundMsg = (data.gotchat && data.gotchat.msg) ? data.gotchat.msg : data.msg;
+                } else if (data.chat && typeof data.chat === 'string') {
+                    foundMsg = data.chat;
+                } else if (data.msg && typeof data.msg === 'string') {
+                    foundMsg = data.msg;
+                } else if (data.data && typeof data.data === 'object') {
+                    // ขุดลงไปในชั้น data
+                    let sub = data.data;
+                    foundMsg = sub.msg || sub.chat || (sub.gotchat ? sub.gotchat.msg : null);
+                }
 
-                if (msg) {
-                    let clean = msg.split('<')[0].replace(/<[^>]*>?/gm, '').trim();
-                    if (clean && !clean.includes("[object Object]")) {
+                if (foundMsg && typeof foundMsg === 'string') {
+                    // ล้างรหัส HTML ขยะออก
+                    let clean = foundMsg.replace(/<[^>]*>?/gm, '').trim();
+                    // บล็อกข้อความระบบที่เป็น [object Object]
+                    if (clean && clean !== "" && clean !== "[object Object]") {
                         showToast(clean);
-                        addHistory(clean, "MCR ศูนย์ควบคุม", false);
+                        addHistory(clean, "ศูนย์ MCR", false);
                     }
                 }
             });
@@ -258,11 +275,11 @@
         function sendToNinjaChat(text) {
             const iframe = document.getElementById('vid');
             if (!iframe || !iframe.contentWindow) return;
+            // ส่งทั้ง 2 รูปแบบเพื่อความชัวร์
             iframe.contentWindow.postMessage({ "action": "sendChat", "value": text }, '*');
+            iframe.contentWindow.postMessage({ "sendChat": text }, '*');
             
-            // บันทึกลงประวัติฝั่งเราเอง
-            addHistory(text, "เรา", true);
-            
+            addHistory(text, "เรา (สนาม)", true);
             if (document.getElementById('chat-panel').style.display === 'flex') toggleChat();
         }
 
@@ -279,7 +296,6 @@
             const list = document.getElementById('history-list');
             const time = new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
             
-            // ลบข้อความเริ่มต้นออก
             if (list.innerText.includes("ยังไม่มีประวัติ")) list.innerHTML = "";
 
             const div = document.createElement('div');
@@ -294,19 +310,17 @@
 
         function toggleChat() {
             let p = document.getElementById('chat-panel');
+            let h = document.getElementById('history-panel');
+            h.style.display = 'none';
             p.style.display = (p.style.display === 'flex') ? 'none' : 'flex';
-            if(p.style.display === 'flex') {
-                document.getElementById('chat-input').focus();
-                document.getElementById('history-panel').style.display = 'none';
-            }
+            if(p.style.display === 'flex') document.getElementById('chat-input').focus();
         }
 
         function toggleHistory() {
             let p = document.getElementById('history-panel');
+            let c = document.getElementById('chat-panel');
+            c.style.display = 'none';
             p.style.display = (p.style.display === 'flex') ? 'none' : 'flex';
-            if(p.style.display === 'flex') {
-                document.getElementById('chat-panel').style.display = 'none';
-            }
         }
 
         let toastT;
@@ -314,6 +328,10 @@
             const t = document.getElementById('msg-toast');
             document.getElementById('msg-text').innerText = txt;
             t.style.display = 'block';
+            
+            // สั่นเตือนมือถือถ้าทำได้
+            if (window.navigator && window.navigator.vibrate) window.navigator.vibrate([200, 100, 200]);
+            
             if(toastT) clearTimeout(toastT);
             toastT = setTimeout(() => { t.style.display = 'none'; }, 12000);
         }
@@ -340,15 +358,25 @@
             function up() {
                 const n = navigator.connection;
                 const txt = document.getElementById('net-text');
-                if (!navigator.onLine) { txt.innerText = "OFFLINE"; return; }
+                const icon = document.getElementById('net-icon');
+                if (!navigator.onLine) { 
+                    txt.innerText = "OFFLINE"; 
+                    icon.innerText = "🔴";
+                    return; 
+                }
                 if (n) {
                     const dl = n.downlink || 0;
-                    if (dl >= 3) { txt.innerText="SIGNAL GOOD"; }
-                    else if (dl >= 1) { txt.innerText="SIGNAL LOW"; }
-                    else { txt.innerText="BAD CONNECTION"; }
-                } else { txt.innerText="CONNECTED"; }
+                    if (dl >= 3) { txt.innerText="SIGNAL GOOD"; icon.innerText = "🟢"; }
+                    else if (dl >= 1) { txt.innerText="SIGNAL LOW"; icon.innerText = "🟡"; }
+                    else { txt.innerText="BAD CONNECTION"; icon.innerText = "🔴"; }
+                } else { 
+                    txt.innerText="CONNECTED"; 
+                    icon.innerText = "🟢";
+                }
             }
-            up(); window.addEventListener('online', up); window.addEventListener('offline', up);
+            up(); 
+            window.addEventListener('online', up); 
+            window.addEventListener('offline', up);
         }
     </script>
 </body>
