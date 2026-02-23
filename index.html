@@ -13,7 +13,7 @@
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body, html { margin: 0; padding: 0; width: 100%; height: 100dvh; background: #000; font-family: 'Prompt', sans-serif; overflow: hidden; }
 
-        /* --- LOBBY (หน้าเลือกโหมด) --- */
+        /* --- LOBBY --- */
         #lobby { 
             position: absolute; inset: 0; z-index: 100; background: #111; 
             display: flex; flex-direction: column; padding: 20px; text-align: center; overflow-y: auto; 
@@ -42,28 +42,24 @@
         #live-view { display: none; position: fixed; inset: 0; background: #000; z-index: 50; }
         iframe { width: 100%; height: 100%; border: none; }
 
-        /* --- STATUS BAR (แถบสถานะซ้ายบน) --- */
+        /* --- STATUS BAR --- */
         .status-bar {
-            position: fixed !important; top: 15px; left: 15px; z-index: 999999 !important;
+            position: fixed !important; top: 15px; left: 15px; z-index: 999;
             background: rgba(0,0,0,0.6); padding: 8px 12px; border-radius: 20px;
-            color: white; font-size: 12px; display: flex; gap: 15px; align-items: center;
+            color: white; font-size: 11px; display: flex; gap: 12px; align-items: center;
             backdrop-filter: blur(5px); border: 1px solid rgba(255,255,255,0.1);
-            pointer-events: auto; cursor: pointer; font-weight: 500;
+            pointer-events: auto; cursor: pointer;
         }
-        .status-item { display: flex; align-items: center; gap: 5px; }
-        .text-good { color: #34c759; }
-        .text-warn { color: #ffcc00; }
-        .text-bad { color: #ff3b30; }
+        .status-item { display: flex; align-items: center; gap: 5px; white-space: nowrap; }
 
-        /* --- CONTROL (แถบขวา) --- */
+        /* --- SIDE CONTROL --- */
         .side-ctrl {
             position: fixed !important; right: 15px; top: 50%; transform: translateY(-50%);
             display: flex; flex-direction: column; gap: 15px; align-items: center;
             background: rgba(0,0,0,0.6); padding: 15px 10px; border-radius: 35px;
             backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1);
-            z-index: 999999 !important; pointer-events: auto;
+            z-index: 1000; pointer-events: auto;
         }
-
         .btn-act { 
             width: 45px; height: 45px; border-radius: 50%; border: none; 
             background: rgba(255,255,255,0.15); color: white; font-size: 20px; 
@@ -72,108 +68,112 @@
         .btn-act:active { background: white; color: black; }
         .btn-home { background: #007aff; font-size: 11px; font-weight: bold; }
 
-        /* --- MESSAGE POPUP (รับข้อความจากศูนย์) --- */
+        /* --- MESSAGE TOAST (Incoming) --- */
         #msg-toast {
             position: fixed !important; top: 20%; left: 50%; transform: translate(-50%, -50%);
             width: 85%; max-width: 400px; background: rgba(0,0,0,0.95); 
-            border-left: 5px solid #007aff; 
+            border-left: 5px solid #34c759; 
             color: white; padding: 15px 20px; border-radius: 8px; text-align: center;
-            display: none; z-index: 2147483647 !important; pointer-events: auto;
+            display: none; z-index: 2000 !important; pointer-events: auto;
             box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            animation: slideInToast 0.3s ease-out;
         }
-        .toast-close {
-            position: absolute; top: 5px; right: 10px; color: #888; font-size: 16px; 
-            background: none; border: none; cursor: pointer; padding: 5px;
-        }
-        @keyframes slideDown { from {transform: translate(-50%, -20px); opacity:0;} to {transform: translate(-50%, 0); opacity:1;} }
+        @keyframes slideInToast { from { opacity: 0; transform: translate(-50%, -60%); } to { opacity: 1; transform: translate(-50%, -50%); } }
+        .toast-close { position: absolute; top: 5px; right: 10px; color: #888; font-size: 16px; background: none; border: none; cursor: pointer; padding: 5px; }
 
-        /* --- CHAT SEND PANEL (ส่งข้อความกลับศูนย์) --- */
+        /* --- CHAT PANEL (Reply) --- */
         #chat-panel {
             position: fixed !important; bottom: 20px; left: 50%; transform: translateX(-50%);
-            width: 90%; max-width: 400px; background: rgba(0,0,0,0.85);
+            width: 90%; max-width: 400px; background: rgba(10,10,10,0.95);
             border: 1px solid rgba(255,255,255,0.1); border-top: 3px solid #007aff;
-            padding: 15px; border-radius: 12px; z-index: 2147483647 !important;
+            padding: 15px; border-radius: 12px; z-index: 2100 !important;
             display: none; flex-direction: column; gap: 10px;
-            backdrop-filter: blur(10px); pointer-events: auto;
+            backdrop-filter: blur(15px); pointer-events: auto;
         }
-        .chat-panel-close { position: absolute; top: 5px; right: 10px; color: #aaa; background: none; border: none; font-size: 16px; cursor: pointer; padding: 5px; }
-        .quick-replies { display: flex; gap: 8px; justify-content: space-between; margin-bottom: 5px; }
+        .chat-panel-close { position: absolute; top: 5px; right: 10px; color: #aaa; background: none; border: none; font-size: 18px; cursor: pointer; }
+        .quick-replies { display: flex; gap: 8px; justify-content: space-between; }
         .quick-replies button {
-            flex: 1; background: #1a1a1a; color: white; border: 1px solid #333;
-            padding: 10px 5px; border-radius: 6px; font-size: 13px; cursor: pointer; font-family: 'Prompt', sans-serif; transition: 0.2s;
+            flex: 1; background: #222; color: white; border: 1px solid #333;
+            padding: 12px 5px; border-radius: 8px; font-size: 13px; cursor: pointer; font-family: 'Prompt', sans-serif;
         }
-        .quick-replies button:active { background: #007aff; border-color: #007aff; }
-        .chat-input-row { display: flex; gap: 8px; }
+        .quick-replies button:active { background: #007aff; }
+        .chat-input-row { display: flex; gap: 8px; margin-top: 5px; }
         #chat-input {
-            flex: 1; background: #222; border: 1px solid #444; color: white;
-            padding: 10px; border-radius: 6px; font-family: 'Prompt', sans-serif; font-size: 14px;
+            flex: 1; background: #111; border: 1px solid #444; color: white;
+            padding: 12px; border-radius: 8px; font-family: 'Prompt', sans-serif; font-size: 15px;
         }
-        #chat-input:focus { outline: none; border-color: #007aff; }
-        .btn-send {
-            background: #007aff; color: white; border: none; padding: 0 15px;
-            border-radius: 6px; font-weight: bold; cursor: pointer; font-family: 'Prompt', sans-serif;
-        }
-        .btn-send:active { background: #0056b3; }
+        .btn-send { background: #007aff; color: white; border: none; padding: 0 15px; border-radius: 8px; font-weight: bold; cursor: pointer; }
 
-        /* --- BLACK SCREEN --- */
-        #ghost { 
-            position: fixed !important; inset: 0; background: #000; z-index: 2147483647 !important; display: none; 
-            align-items: center; justify-content: center; flex-direction: column; color: #444; 
+        /* --- HISTORY PANEL (New) --- */
+        #history-panel {
+            position: fixed !important; inset: 0; background: rgba(0,0,0,0.9);
+            z-index: 3000 !important; display: none; flex-direction: column;
+            padding-top: env(safe-area-inset-top, 20px);
+            backdrop-filter: blur(20px);
         }
+        .history-top { padding: 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #222; }
+        #history-list { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 10px; }
+        
+        /* สไตล์ข้อความในประวัติ */
+        .h-item { padding: 10px 15px; border-radius: 12px; max-width: 85%; line-height: 1.4; }
+        .h-meta { font-size: 10px; margin-bottom: 3px; opacity: 0.6; }
+        /* ข้อความจากศูนย์ (ชิดซ้าย) */
+        .h-from-mcr { align-self: flex-start; background: #1a1a1a; border-left: 3px solid #34c759; }
+        /* ข้อความจากเราเอง (ชิดขวา) */
+        .h-from-me { align-self: flex-end; background: #007aff22; border-right: 3px solid #007aff; text-align: right; }
+
+        /* Custom Scrollbar */
+        #history-list::-webkit-scrollbar { width: 4px; }
+        #history-list::-webkit-scrollbar-thumb { background: #333; border-radius: 10px; }
+
+        /* --- GHOST MODE --- */
+        #ghost { position: fixed !important; inset: 0; background: #000; z-index: 5000 !important; display: none; align-items: center; justify-content: center; flex-direction: column; color: #444; }
     </style>
 </head>
 <body>
 
     <div id="lobby">
         <h1>CM108 LIVE</h1>
-        
         <div class="label">1. เลือกโหมดคุณภาพ</div>
         <div class="mode-grid">
             <div class="m-btn active" id="m-hq" onclick="setMode('hq')"><span>ชัดพิเศษ</span><small>1080p 60fps</small></div>
             <div class="m-btn" id="m-safe" onclick="setMode('safe')"><span>เน้นเสถียร</span><small>720p 30fps</small></div>
             <div class="m-btn" id="m-auto" onclick="setMode('auto')"><span>ออโต้</span><small>ปรับตามเน็ต</small></div>
         </div>
-        
         <div class="label">2. เลือกช่องกล้อง</div>
         <div class="cam-grid">
             <div class="c-card" onclick="start('CM108_Cam1')"><strong>CAM 01</strong><small style="color:#888">กล้องหลัก</small></div>
             <div class="c-card" onclick="start('CM108_Cam2')"><strong>CAM 02</strong><small style="color:#888">กล้องรอง</small></div>
             <div class="c-card" onclick="start('CM108_Cam3')"><strong>CAM 03</strong><small style="color:#888">มุมกว้าง</small></div>
-            <div class="c-card" onclick="start('CM108_Cam4')"><strong>CAM 04</strong><small style="color:#888">โดรน</small></div>
         </div>
-        
-        <p style="font-size:11px; color:#555; margin-top:30px;">
-            เมื่อกดเลือกกล้องแล้ว จะเข้าสู่หน้าทดสอบภาพ<br>ให้เช็คกล้องและไมค์ ก่อนกดปุ่ม START 🟢
-        </p>
     </div>
 
     <div id="live-view">
         <iframe id="vid" allow="camera;microphone;fullscreen;display-capture;autoplay"></iframe>
 
-        <!-- แถบสถานะซ้ายบน (กดเพื่อทดสอบรับแชทได้) -->
-        <div class="status-bar" id="status-bar" style="display: none;" onclick="showToast('ทดสอบข้อความจากระบบ!')">
-            <div class="status-item"><span id="net-icon">🟢</span> <span id="net-text">ตรวจสอบสัญญาณ...</span></div>
+        <div class="status-bar" id="status-bar" style="display: none;">
+            <div class="status-item"><span id="net-icon">🟢</span> <span id="net-text">Signal OK</span></div>
         </div>
 
-        <!-- แถบเครื่องมือด้านขวา -->
         <div class="side-ctrl">
-            <button class="btn-act" onclick="toggleChat()" title="ส่งข้อความหาศูนย์">💬</button>
+            <button class="btn-act" onclick="toggleChat()" title="ส่งแชท">💬</button>
+            <button class="btn-act" onclick="toggleHistory()" title="ประวัติ">📜</button>
             <button class="btn-act" onclick="toggleFullScreen()" title="เต็มจอ">⛶</button>
-            <button class="btn-act" onclick="toggleGhost()" title="พักหน้าจอ">🌙</button>
-            <button class="btn-act btn-home" onclick="location.reload()" title="กลับหน้าแรก">HOME</button>
+            <button class="btn-act" onclick="toggleGhost()" title="พักจอ">🌙</button>
+            <button class="btn-act btn-home" onclick="location.reload()">HOME</button>
         </div>
 
-        <!-- กล่องรับข้อความจาก MCR -->
+        <!-- แจ้งเตือนข้อความเด้ง (ล่าสุด) -->
         <div id="msg-toast">
             <button class="toast-close" onclick="closeToast()">✕</button>
-            <div style="font-size:10px; color:#aaa; margin-bottom:5px;">คำสั่งจากศูนย์ (MCR):</div>
-            <span id="msg-text" style="font-size:20px; font-weight:bold; color:#fff;">--</span>
+            <div style="font-size:10px; color:#34c759; margin-bottom:5px; font-weight: bold;">📥 ข้อความจากศูนย์ MCR:</div>
+            <span id="msg-text" style="font-size:22px; font-weight:bold; color:#fff;">--</span>
         </div>
 
-        <!-- กล่องพิมพ์ข้อความตอบกลับ MCR -->
+        <!-- แผงส่งคำตอบด่วน -->
         <div id="chat-panel">
             <button class="chat-panel-close" onclick="toggleChat()">✕</button>
-            <div style="font-size:14px; font-weight:bold; color:#fff; margin-bottom:5px;">ตอบกลับศูนย์ (MCR)</div>
+            <div style="font-size:14px; font-weight:bold; color:#fff; margin-bottom:10px;">ตอบกลับศูนย์ MCR</div>
             <div class="quick-replies">
                 <button onclick="sendQuickChat('รับทราบ')">รับทราบ</button>
                 <button onclick="sendQuickChat('รอสักครู่')">รอสักครู่</button>
@@ -184,18 +184,28 @@
                 <button class="btn-send" onclick="sendCustomChat()">ส่ง</button>
             </div>
         </div>
+
+        <!-- แผงประวัติแชท (New) -->
+        <div id="history-panel">
+            <div class="history-top">
+                <h2 style="margin:0; font-size:20px; color:#007aff;">📜 ประวัติแชท</h2>
+                <button onclick="toggleHistory()" style="background:none; border:none; color:#888; font-size:24px;">✕</button>
+            </div>
+            <div id="history-list">
+                <!-- รายการแชทจะมาที่นี่ -->
+            </div>
+        </div>
     </div>
 
-    <!-- โหมดพักหน้าจอ -->
     <div id="ghost" onclick="toggleGhost()">
         <div style="font-size:50px; margin-bottom:15px;">🎥</div>
         <h2 style="color:#fff; margin:0;">พักหน้าจอ</h2>
         <p style="font-size:12px; margin-top:5px;">(กำลังส่งสัญญาณภาพและเสียงอยู่)</p>
-        <div style="margin-top:20px; font-size:11px; border:1px solid #333; padding:5px 15px; border-radius:20px;">แตะหน้าจอ 1 ครั้งเพื่อปลุก</div>
     </div>
 
     <script>
         let mode = 'hq';
+        let currentCam = "";
 
         function setMode(m) {
             mode = m;
@@ -204,193 +214,141 @@
         }
 
         function start(id) {
+            currentCam = id;
             let p = "";
             if(mode === 'hq') p = "&width=1920&height=1080&videobitrate=8000&framerate=60";
             else if(mode === 'safe') p = "&width=1280&height=720&bitrate=2500&framerate=30";
             else p = "&quality=1";
 
-            // เพิ่ม &api=1 และ &viewchat=1 เพื่อเปิดประตูให้ Chat ทำงาน
             let url = "https://vdo.ninja/?push=" + id + "&room=CM108_NewsRoom" + p + 
-                      "&clean=0&viewchat=1&api=1&label=" + id + "&select";
+                      "&clean=1&viewchat=1&api=1&label=" + id;
 
             document.getElementById('vid').src = url;
             document.getElementById('lobby').style.display = 'none';
             document.getElementById('live-view').style.display = 'block';
-            
             document.getElementById('status-bar').style.display = 'flex';
+            
             initMonitor();
             requestWakeLock();
-
-            // === ระบบดักจับแชทจาก MCR ===
+            
+            // ตัวดักฟังข้อความจากศูนย์ (API Message)
             window.addEventListener('message', function(e) {
                 if (!e.data) return;
-                let rawStr = typeof e.data === 'string' ? e.data : JSON.stringify(e.data);
-                if (rawStr.includes('"stats"') || rawStr.includes('"video-bitrate"') || rawStr.includes('"mic-volume"')) return;
-                
-                function extractMsg(item) {
-                    if (typeof item === 'string') {
-                        if (item.trim().startsWith('{')) {
-                            try { item = JSON.parse(item); } catch(err) { return null; }
-                        } else return null;
-                    }
-                    if (typeof item !== 'object' || item === null) return null;
-                    if (item.gotchat && item.gotchat.msg) return item.gotchat.msg;
-                    if (item.chat && typeof item.chat === 'string') return item.chat;
-                    if (item.msg && typeof item.msg === 'string') return item.msg;
-                    if (item.message && typeof item.message === 'string') return item.message;
-                    for (let key in item) {
-                        let res = extractMsg(item[key]);
-                        if (res) return res;
-                    }
-                    return null;
+                let data = e.data;
+                if (typeof data === 'string' && data.startsWith('{')) {
+                    try { data = JSON.parse(data); } catch(err) { return; }
                 }
 
-                try {
-                    let rawMsg = extractMsg(e.data);
-                    if (rawMsg && typeof rawMsg === 'string') {
-                        let cleanTxt = rawMsg.split('<')[0].trim();
-                        if (cleanTxt === "") cleanTxt = rawMsg.replace(/<[^>]*>?/gm, '').trim();
-                        if (cleanTxt !== "") showToast(cleanTxt);
+                // ค้นหาข้อความแชท
+                let msg = null;
+                if (data.gotchat && data.gotchat.msg) msg = data.gotchat.msg;
+                else if (data.chat && typeof data.chat === 'string') msg = data.chat;
+                else if (data.msg && typeof data.msg === 'string') msg = data.msg;
+
+                if (msg) {
+                    let clean = msg.split('<')[0].replace(/<[^>]*>?/gm, '').trim();
+                    if (clean && !clean.includes("[object Object]")) {
+                        showToast(clean);
+                        addHistory(clean, "MCR ศูนย์ควบคุม", false);
                     }
-                } catch(error) { console.error("Chat parsing error:", error); }
+                }
             });
         }
 
-        // --- ฟังก์ชันรับข้อความ ---
-        let toastTimeout;
-        function showToast(textToShow) {
-            const toast = document.getElementById('msg-toast');
-            const msgText = document.getElementById('msg-text');
-            msgText.innerText = textToShow;
-            toast.style.display = 'block';
-            toast.style.animation = 'none';
-            toast.offsetHeight; 
-            toast.style.animation = 'slideDown 0.3s';
-            if(toastTimeout) clearTimeout(toastTimeout);
-            toastTimeout = setTimeout(() => { toast.style.display = 'none'; }, 10000);
+        function sendToNinjaChat(text) {
+            const iframe = document.getElementById('vid');
+            if (!iframe || !iframe.contentWindow) return;
+            iframe.contentWindow.postMessage({ "action": "sendChat", "value": text }, '*');
+            
+            // บันทึกลงประวัติฝั่งเราเอง
+            addHistory(text, "เรา", true);
+            
+            if (document.getElementById('chat-panel').style.display === 'flex') toggleChat();
         }
 
-        function closeToast() {
-            document.getElementById('msg-toast').style.display = 'none';
-        }
-
-        // --- ฟังก์ชันส่งข้อความกลับหาศูนย์ MCR (ปรับปรุงใหม่เพื่อความชัวร์ 100%) ---
-        function toggleChat() {
-            let panel = document.getElementById('chat-panel');
-            if (panel.style.display === 'flex') {
-                panel.style.display = 'none';
-            } else {
-                panel.style.display = 'flex';
-                document.getElementById('chat-input').focus();
-            }
-        }
-
-        function sendQuickChat(text) {
-            sendToNinjaChat(text);
-        }
-
+        function sendQuickChat(text) { sendToNinjaChat(text); }
         function sendCustomChat() {
             let input = document.getElementById('chat-input');
-            let text = input.value.trim();
-            if (text !== '') {
-                sendToNinjaChat(text);
-                input.value = ''; 
+            if (input.value.trim()) {
+                sendToNinjaChat(input.value.trim());
+                input.value = '';
             }
         }
 
-        function sendToNinjaChat(text) {
-            let iframe = document.getElementById('vid');
-            if (iframe && iframe.contentWindow) {
-                // ยิงคำสั่งทุกรูปแบบที่ API VDO.Ninja อาจจะใช้ในแต่ละเวอร์ชัน
-                const target = '*';
-                
-                // รูปแบบมาตรฐานที่สุด
-                iframe.contentWindow.postMessage({ "chat": text }, target);
-                
-                // รูปแบบ API มาตรฐาน (ส่งเป็น Director Chat)
-                iframe.contentWindow.postMessage({ "sendChat": text }, target);
-                
-                // รูปแบบส่งเป็น Function Call
-                iframe.contentWindow.postMessage({ "function": "sendChat", "value": text }, target);
-                
-                // รูปแบบ String (บางเวอร์ชันต้องการแบบนี้)
-                iframe.contentWindow.postMessage(JSON.stringify({ "sendChat": text }), target);
+        function addHistory(msg, sender, isMe) {
+            const list = document.getElementById('history-list');
+            const time = new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
+            
+            // ลบข้อความเริ่มต้นออก
+            if (list.innerText.includes("ยังไม่มีประวัติ")) list.innerHTML = "";
 
-                console.log("Sent message variants for: " + text);
-                
-                toggleChat();
-                showToast("ส่งแล้ว: " + text);
+            const div = document.createElement('div');
+            div.className = `h-item ${isMe ? 'h-from-me' : 'h-from-mcr'}`;
+            div.innerHTML = `
+                <div class="h-meta">${sender} • ${time}</div>
+                <div class="h-msg">${msg}</div>
+            `;
+            list.appendChild(div);
+            list.scrollTop = list.scrollHeight;
+        }
+
+        function toggleChat() {
+            let p = document.getElementById('chat-panel');
+            p.style.display = (p.style.display === 'flex') ? 'none' : 'flex';
+            if(p.style.display === 'flex') {
+                document.getElementById('chat-input').focus();
+                document.getElementById('history-panel').style.display = 'none';
             }
         }
 
-        // --- ฟังก์ชันควบคุมอื่นๆ ---
+        function toggleHistory() {
+            let p = document.getElementById('history-panel');
+            p.style.display = (p.style.display === 'flex') ? 'none' : 'flex';
+            if(p.style.display === 'flex') {
+                document.getElementById('chat-panel').style.display = 'none';
+            }
+        }
+
+        let toastT;
+        function showToast(txt) {
+            const t = document.getElementById('msg-toast');
+            document.getElementById('msg-text').innerText = txt;
+            t.style.display = 'block';
+            if(toastT) clearTimeout(toastT);
+            toastT = setTimeout(() => { t.style.display = 'none'; }, 12000);
+        }
+
+        function closeToast() { document.getElementById('msg-toast').style.display = 'none'; }
+        
         function toggleGhost() {
             let g = document.getElementById('ghost');
             g.style.display = (g.style.display === 'flex') ? 'none' : 'flex';
         }
 
         function toggleFullScreen() {
-            const doc = window.document;
-            const docEl = doc.documentElement;
-            const requestFullScreen = docEl.requestFullscreen || docEl.webkitRequestFullscreen || docEl.mozRequestFullScreen || docEl.msRequestFullscreen;
-            const cancelFullScreen = doc.exitFullscreen || doc.webkitExitFullscreen || doc.mozCancelFullScreen || doc.msExitFullscreen;
-            if (!doc.fullscreenElement && !doc.webkitFullscreenElement && !doc.mozFullScreenElement && !doc.msFullscreenElement) {
-                if (requestFullScreen) {
-                    requestFullScreen.call(docEl).catch(err => { alert(`ไม่สามารถเปิดเต็มจอได้: ${err.message}`); });
-                } else {
-                    alert("iPhone ไม่รองรับปุ่มกดเต็มจอ\n\nวิธีทำให้เต็มจอ:\n1. กดปุ่ม 'แชร์' ด้านล่างของ Safari\n2. เลือก 'เพิ่มไปยังหน้าจอโฮม' (Add to Home Screen)\n3. เปิดใช้งานผ่านไอคอนบนหน้าจอโฮม");
-                }
+            const el = document.documentElement;
+            if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+                (el.requestFullscreen || el.webkitRequestFullscreen || el.mozRequestFullScreen || el.msRequestFullscreen).call(el);
             } else {
-                if (cancelFullScreen) cancelFullScreen.call(doc);
+                (document.exitFullscreen || document.webkitExitFullscreen || document.mozCancelFullScreen || document.msExitFullscreen).call(document);
             }
         }
 
-        let wakeLock = null;
-        async function requestWakeLock() {
-            try {
-                if ('wakeLock' in navigator) wakeLock = await navigator.wakeLock.request('screen');
-            } catch (err) {}
-        }
-        document.addEventListener('visibilitychange', () => {
-            if (wakeLock !== null && document.visibilityState === 'visible') requestWakeLock();
-        });
+        async function requestWakeLock() { try { if ('wakeLock' in navigator) await navigator.wakeLock.request('screen'); } catch (e) {} }
 
         function initMonitor() {
-            function updateNetwork() {
-                const netText = document.getElementById('net-text');
-                const netIcon = document.getElementById('net-icon');
-                if (navigator.onLine) {
-                    if (navigator.connection) {
-                        const type = navigator.connection.effectiveType; 
-                        const dl = navigator.connection.downlink || 0;
-                        if (type === '4g' || dl >= 3) {
-                            netText.innerText = 'สัญญาณดีเยี่ยม (เน็ตแรง)';
-                            netText.className = 'text-good';
-                            netIcon.innerText = '🟢';
-                        } else if (type === '3g' || dl >= 1) {
-                            netText.innerText = 'สัญญาณปานกลาง (พอใช้)';
-                            netText.className = 'text-warn';
-                            netIcon.innerText = '🟡';
-                        } else {
-                            netText.innerText = 'สัญญาณอ่อน (เน็ตช้า)';
-                            netText.className = 'text-bad';
-                            netIcon.innerText = '🔴';
-                        }
-                    } else {
-                        netText.innerText = 'เชื่อมต่อแล้ว';
-                        netText.className = 'text-good';
-                        netIcon.innerText = '🟢';
-                    }
-                } else {
-                    netText.innerText = 'ขาดการเชื่อมต่อ (ออฟไลน์)';
-                    netText.className = 'text-bad';
-                    netIcon.innerText = '❌';
-                }
+            function up() {
+                const n = navigator.connection;
+                const txt = document.getElementById('net-text');
+                if (!navigator.onLine) { txt.innerText = "OFFLINE"; return; }
+                if (n) {
+                    const dl = n.downlink || 0;
+                    if (dl >= 3) { txt.innerText="SIGNAL GOOD"; }
+                    else if (dl >= 1) { txt.innerText="SIGNAL LOW"; }
+                    else { txt.innerText="BAD CONNECTION"; }
+                } else { txt.innerText="CONNECTED"; }
             }
-            updateNetwork();
-            window.addEventListener('online', updateNetwork);
-            window.addEventListener('offline', updateNetwork);
-            if (navigator.connection) navigator.connection.addEventListener('change', updateNetwork);
+            up(); window.addEventListener('online', up); window.addEventListener('offline', up);
         }
     </script>
 </body>
